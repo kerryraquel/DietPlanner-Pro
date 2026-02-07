@@ -1,0 +1,668 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Utensils, Calendar, ChevronRight, Info, 
+  Flame, RefreshCw, Droplets, Plus, Minus, 
+  ShoppingCart, Trash2, Search, ArrowLeft, Check, XCircle
+} from 'lucide-react';
+
+// --- 1. 核心數據與食譜資料庫 ---
+
+const USER_STATS = {
+  tdee: 1538,
+  target_fast: 600,
+  target_normal: 1350 
+};
+
+// 輕斷食專用菜單 (Hardcoded)
+const FASTING_MENU = {
+  Breakfast: {
+    name: "輕斷食早餐",
+    desc: "一隻雞蛋 + 200ml 牛奶 / 無糖乳酪",
+    cal: 205
+  },
+  Lunch: {
+    name: "輕斷食午餐",
+    desc: "半條粟米 + 100g 雞/牛肉 + 200g 蔬菜", // 已增加至 100g
+    cal: 290 // 100(corn) + 140(meat avg) + 50(veg)
+  },
+  Dinner: {
+    name: "蔬菜湯",
+    desc: "清湯底 + 大量蔬菜 (無澱粉)",
+    cal: 60
+  }
+};
+
+// 正常日食譜清單
+const RAW_MAIN_LIST = [
+  "Cobb Salad", "蝦仁芋絲青瓜雞蛋沙律", "Spicy Salmon poke bowl", "Miso Mushroom Coconut Milk Udon", 
+  "Caesar Salad with chicken", "Shepherd’s Pie", "洋蔥木耳炒雞蛋", "意式蔬菜湯", "Toscana Salmon", 
+  "花椒青椒炒雞丁", "蘋果炖豬扒", "酸辣薯絲燘牛肉", "地中海蝦翠玉瓜彩椒", "法式菌菇炖雞", 
+  "芝士牛肉蔬菜鍋", "黑松露蘑菇蝦", "白蘑菇炒雞髀肉", "娃娃菜番茄粉絲燜牛肉", "番茄牛肉豆腐煲", 
+  "粉絲節瓜蝦米", "蘆筍烤三文魚薯仔", "葡式蝦仁水牛芝士雞蛋沙律", "長邊豆南瓜雞肉", 
+  "青瓜牛油果豆芽山羊芝士三文治", "牛油果雞肉希臘乳酪wrap", "牛油果芒果蝦仁聖女果沙律", 
+  "貝貝南瓜蝦雞胸蘆筍紅蘿蔔薯仔空氣炸鍋", "烤薯仔蝦仁蘆筍白蘑菇", "烤椰菜BB紅薯雞蛋沙律", 
+  "西蘭花牛肉炒烏冬", "粟米雞胸沙律", "烤椰菜配Romesco Sauce", "creamy garlic 西蘭花三文魚poke", 
+  "蒜烤雞肉紅蘿蔔翠玉瓜薯仔西蘭花", "烤雞髀粟米，希臘沙律", "烤魚烚蛋蘆筍西蘭花薯仔", "silken tofu pasta", 
+  "翠玉瓜+煙三文魚/煎蛋/蝦仁/雞胸+牛油果/生菜/甜椒+少量芝士碎卷餅", "娃娃菜雞蛋豆腐湯", 
+  "娃娃菜粉絲炆牛肉", "辣味鮮蝦雜蔬", "蕃茄薯仔牛肉湯", "蘿蔔煎蛋湯", "蕃茄金針菇豆腐湯", 
+  "菠菜雞蛋湯", "紫菜牛肉肉湯", "蕃茄炒蛋+清炒蔬菜", "蒜香蘑菇炆蝦仁/煎雞", "酸奶薯仔雞蛋沙律", 
+  "翠玉瓜炒牛肉+炒豆芽", "蔬菜牛肉鍋", "Tunacado Sandwich", "地中海檸檬烤雞沙律", 
+  "Creamy Chicken Corn Salad", "地中海風味蝦仁碗", "紅蘿蔔炒牛肉+炒椰菜 （主食Optional）", 
+  "彩椒百蘑菇炒生菜雞肉 （主食Optional）", "青椒炒牛肉+炒法邊豆 （主食Optional）", 
+  "牛油果雞肉沙律 （Wrap Optional）", "牛肉粒牛油果蕃茄洋蔥wrap", 
+  "蒸水蛋 + 半拳粗糧 + 半拳蛋白質+ 炒蔬菜", "椰菜紅蘿蔔絲炒雞蛋（雞/牛肉 Optional）", 
+  "Shrimp Avocado Lettuce Boats", "蝦仁芋絲西蘭花炒蛋", "Cucumber and Avocado Sandwich", 
+  "Italian Frittata", "清蒸鱸魚+炒蔬菜", "日式鯖魚定食 （可選蒟蒻飯）", "滑蛋蝦仁蓋飯 （可選蒟蒻飯）", 
+  "檸檬手撕雞千張或蒟蒻麵配烤蔬菜", "韓式泡菜豆腐蔬菜鍋", "墨西哥雞肉碗"
+];
+
+const BREAKFAST_ONLY_NAMES = [
+  "蝦仁芋絲青瓜雞蛋沙律", "洋蔥木耳炒雞蛋", "葡式蝦仁水牛芝士雞蛋沙律", 
+  "半個粟米 / 無糖乳酪 / 雞蛋 / 半拳藍莓或一拳聖女果 四選二", "生菜雞蛋餅", "菠菜雞蛋卷", 
+  "青瓜紅蘿蔔雞蛋卷", "南瓜牛奶雞蛋糕", "蘑菇蝦仁紅蘿蔔牛奶粟米湯", 
+  "翠玉瓜+煙三文魚/煎蛋/蝦仁/雞胸+牛油果/生菜/甜椒+少量芝士碎卷餅", "酸奶薯仔雞蛋沙律", 
+  "Tunacado Sandwich", "椰菜紅蘿蔔絲炒蛋（雞/牛肉 Optional）", "Shrimp Avocado Lettuce Boats", 
+  "Cucumber and Avocado Sandwich", "Italian Frittata", 
+  "Overnight rolled oats + milk + small amount of fruit"
+];
+
+// 智能生成食譜數據
+const generateRecipeDB = () => {
+  const allNames = new Set([...RAW_MAIN_LIST, ...BREAKFAST_ONLY_NAMES]);
+  const db = [];
+  
+  allNames.forEach((name, index) => {
+    const lowerName = name.toLowerCase();
+    let category = "主食";
+    let template = "StirFry"; 
+
+    if (lowerName.includes("salad") || lowerName.includes("沙律") || lowerName.includes("poke") || lowerName.includes("bowl")) {
+      category = "沙律/輕食";
+      template = "Salad";
+    } else if (lowerName.includes("soup") || lowerName.includes("湯") || lowerName.includes("鍋") || lowerName.includes("stew")) {
+      category = "湯品/鍋物";
+      template = "Soup";
+    } else if (lowerName.includes("sandwich") || lowerName.includes("wrap") || lowerName.includes("三文治") || lowerName.includes("卷餅") || lowerName.includes("boats")) {
+      category = "輕食/麵包";
+      template = "Sandwich";
+    } else if (lowerName.includes("oats") || lowerName.includes("yogurt") || lowerName.includes("乳酪") || lowerName.includes("fruit") || lowerName.includes("cake") || lowerName.includes("蛋糕")) {
+      category = "早餐";
+      template = "BreakfastBowl";
+    } else if (lowerName.includes("pasta") || lowerName.includes("udon") || lowerName.includes("麵") || lowerName.includes("飯")) {
+      category = "麵飯";
+      template = "CarbMain";
+    }
+
+    const variants = {};
+    const baseCal = { L: 280, M: 450, H: 650 };
+    if (template === "Soup") { baseCal.L = 220; baseCal.M = 400; baseCal.H = 600; }
+    if (template === "Salad") { baseCal.L = 250; baseCal.M = 420; baseCal.H = 620; }
+
+    if (name === "南瓜牛奶雞蛋糕") {
+        const specificText = "貝貝南瓜+蛋+奶+代糖蒸30分。冷藏過夜(抗性澱粉)，早餐翻叮";
+        variants.L = { cal: 250, text: "半個: " + specificText };
+        variants.M = { cal: 350, text: "一個: " + specificText };
+        variants.H = { cal: 450, text: "大個/加堅果: " + specificText };
+    } else {
+        switch (template) {
+          case "Salad":
+            variants.L = { cal: baseCal.L, text: "大量蔬菜底 + 蛋白質(80g) + 醋汁 (走澱粉/堅果)" };
+            variants.M = { cal: baseCal.M, text: "蔬菜 + 蛋白質(100g) + 藜麥/薯仔(100g) + 油醋汁" };
+            variants.H = { cal: baseCal.H, text: "蔬菜 + 蛋白質(120g) + 澱粉 + 牛油果/堅果 + 濃醬汁" };
+            break;
+          case "Soup":
+            variants.L = { cal: baseCal.L, text: "清湯底 + 大量蔬菜 + 瘦肉/豆腐 (無主食/粉絲)" };
+            variants.M = { cal: baseCal.M, text: "正常湯底 + 肉類 + 粉絲/薯仔(100g)" };
+            variants.H = { cal: baseCal.H, text: "濃湯底/加椰奶 + 肉類 + 飯/麵包 + 芝士" };
+            break;
+          case "Sandwich":
+            variants.L = { cal: baseCal.L, text: "生菜包代替麵包/餅皮 + 餡料 + 走醬" };
+            variants.M = { cal: baseCal.M, text: "全麥麵包1片/餅皮1張 + 正常餡料 + 少量醬" };
+            variants.H = { cal: baseCal.H, text: "麵包2片/大餅皮 + 雙倍餡料 + 芝士/牛油果" };
+            break;
+          case "BreakfastBowl":
+            variants.L = { cal: 250, text: "半份份量 + 無糖 + 僅少量水果" };
+            variants.M = { cal: 400, text: "正常份量 + 牛奶/豆漿 + 堅果" };
+            variants.H = { cal: 550, text: "大份量 + 全脂奶 + 豐富配料/蜂蜜" };
+            break;
+          case "CarbMain": 
+            variants.L = { cal: 300, text: "蒟蒻麵/椰菜花飯代替主食 + 少油 + 瘦肉" };
+            variants.M = { cal: 500, text: "正常飯/麵(120g) + 正常肉量" };
+            variants.H = { cal: 700, text: "飯/麵(200g) + 加蛋/加肉 + 濃汁" };
+            break;
+          default: 
+            variants.L = { cal: 300, text: "只吃餸(走汁) + 補充大量烚菜 (無飯)" };
+            variants.M = { cal: 500, text: "餸菜 + 飯(100g) / 薯仔" };
+            variants.H = { cal: 700, text: "餸菜(份量加大) + 飯(180g) + 醬汁" };
+        }
+        if (name.includes("Optional")) {
+           variants.L.text = "不加 Optional 選項 (如主食/餅皮)";
+           variants.M.text = "加半份 Optional 選項";
+           variants.H.text = "加全份 Optional 選項";
+        }
+    }
+
+    db.push({
+      id: `gen_${index}`,
+      name: name,
+      category: category,
+      variants: variants
+    });
+  });
+  return db;
+};
+
+const RECIPE_DB = generateRecipeDB();
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const getRandomRecipe = (excludeIds = [], filterFn = null) => {
+  let available = RECIPE_DB.filter(r => !excludeIds.includes(r.id));
+  if (filterFn) available = available.filter(filterFn);
+  if (available.length === 0) available = RECIPE_DB.filter(filterFn || (() => true));
+  if (available.length === 0) return RECIPE_DB[0];
+  return available[Math.floor(Math.random() * available.length)];
+};
+
+const generateInitialPlan = () => {
+  const plan = [];
+  const usedRecipeIds = [];
+
+  DAYS.forEach((day, idx) => {
+    const isWeekend = idx >= 5;
+    const isFast = (idx === 0 || idx === 3); // Mon & Thu
+    
+    const meals = [];
+    const mealTypes = isWeekend ? ['Brunch', 'Dinner'] : ['Breakfast', 'Lunch', 'Dinner'];
+
+    mealTypes.forEach(type => {
+      // 輕斷食日的特殊處理
+      if (isFast) {
+        let fastMealData;
+        if (type === 'Breakfast') fastMealData = FASTING_MENU.Breakfast;
+        else if (type === 'Lunch') fastMealData = FASTING_MENU.Lunch;
+        else fastMealData = FASTING_MENU.Dinner;
+
+        meals.push({
+            type,
+            isFastMeal: true,
+            name: fastMealData.name,
+            desc: fastMealData.desc,
+            cal: fastMealData.cal,
+            skipped: false // 新增 Skip 狀態
+        });
+      } else {
+        // 正常日邏輯
+        let recipe;
+        if (type === 'Breakfast' || type === 'Brunch') {
+           recipe = getRandomRecipe(usedRecipeIds, (r) => BREAKFAST_ONLY_NAMES.includes(r.name));
+        } else {
+           recipe = getRandomRecipe(usedRecipeIds, (r) => !r.name.includes("oats") && !r.name.includes("cake"));
+        }
+
+        if (recipe) {
+          usedRecipeIds.push(recipe.id);
+          if (usedRecipeIds.length > RECIPE_DB.length - 10) usedRecipeIds.length = 0;
+
+          meals.push({
+            type,
+            isFastMeal: false,
+            recipe,
+            size: 'M'
+          });
+        }
+      }
+    });
+
+    plan.push({
+      day,
+      fullDay: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][idx],
+      isWeekend,
+      isFast,
+      water: 0,
+      meals
+    });
+  });
+  return plan;
+};
+
+export default function DietPlannerPro() {
+  const [weekPlan, setWeekPlan] = useState([]);
+  const [shoppingList, setShoppingList] = useState([]);
+  const [newItemText, setNewItemText] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState(null); 
+  const [view, setView] = useState('plan'); 
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    setWeekPlan(generateInitialPlan());
+  }, []);
+
+  const dailyStats = useMemo(() => {
+    return weekPlan.map(day => {
+      let totalCal = 0;
+      day.meals.forEach(meal => {
+        if (meal.isFastMeal) {
+            if (!meal.skipped) totalCal += meal.cal;
+        } else if (meal.recipe) {
+          totalCal += meal.recipe.variants[meal.size].cal;
+        }
+      });
+      const target = day.isFast ? USER_STATS.target_fast : USER_STATS.target_normal;
+      return { totalCal, target, isOver: totalCal > target };
+    });
+  }, [weekPlan]);
+
+  const toggleFastDay = (dayIndex) => {
+    // 重新生成該天的餐單
+    const newPlan = [...weekPlan];
+    const isNowFast = !newPlan[dayIndex].isFast;
+    newPlan[dayIndex].isFast = isNowFast;
+    
+    // 重置該天的 Meals
+    const mealTypes = newPlan[dayIndex].isWeekend ? ['Brunch', 'Dinner'] : ['Breakfast', 'Lunch', 'Dinner'];
+    const newMeals = [];
+    
+    mealTypes.forEach(type => {
+        if (isNowFast) {
+            let fastMealData;
+            if (type === 'Breakfast' || type === 'Brunch') fastMealData = FASTING_MENU.Breakfast;
+            else if (type === 'Lunch') fastMealData = FASTING_MENU.Lunch;
+            else fastMealData = FASTING_MENU.Dinner;
+
+            newMeals.push({
+                type,
+                isFastMeal: true,
+                name: fastMealData.name,
+                desc: fastMealData.desc,
+                cal: fastMealData.cal,
+                skipped: false
+            });
+        } else {
+            // 轉回正常日，隨機取一個
+            let recipe;
+            if (type === 'Breakfast' || type === 'Brunch') {
+                recipe = getRandomRecipe([], (r) => BREAKFAST_ONLY_NAMES.includes(r.name));
+            } else {
+                recipe = getRandomRecipe([], (r) => !r.name.includes("oats"));
+            }
+            newMeals.push({ type, isFastMeal: false, recipe, size: 'M' });
+        }
+    });
+
+    newPlan[dayIndex].meals = newMeals;
+    setWeekPlan(newPlan);
+  };
+
+  const changeSize = (dayIndex, mealIndex, size) => {
+    const newPlan = [...weekPlan];
+    if (!newPlan[dayIndex].meals[mealIndex].isFastMeal) {
+        newPlan[dayIndex].meals[mealIndex].size = size;
+        setWeekPlan(newPlan);
+    }
+  };
+
+  const toggleSkipMeal = (dayIndex, mealIndex) => {
+    const newPlan = [...weekPlan];
+    const meal = newPlan[dayIndex].meals[mealIndex];
+    if (meal.isFastMeal) {
+        meal.skipped = !meal.skipped;
+        setWeekPlan(newPlan);
+    }
+  };
+
+  const selectRecipe = (recipe) => {
+    if (!selectedSlot) return;
+    const { dayIndex, mealIndex } = selectedSlot;
+    const newPlan = [...weekPlan];
+    // 強制轉換為正常餐點格式
+    newPlan[dayIndex].meals[mealIndex] = {
+        type: newPlan[dayIndex].meals[mealIndex].type,
+        isFastMeal: false,
+        recipe: recipe,
+        size: 'M'
+    };
+    setWeekPlan(newPlan);
+    setView('plan');
+    setSelectedSlot(null);
+  };
+
+  const updateWater = (dayIndex, delta) => {
+    const newPlan = [...weekPlan];
+    newPlan[dayIndex].water = Math.max(0, newPlan[dayIndex].water + delta);
+    setWeekPlan(newPlan);
+  };
+
+  const addShoppingItem = () => {
+    if (!newItemText.trim()) return;
+    setShoppingList([...shoppingList, { id: Date.now(), text: newItemText, checked: false }]);
+    setNewItemText("");
+  };
+
+  const toggleShoppingItem = (id) => {
+    setShoppingList(shoppingList.map(item => 
+      item.id === id ? { ...item, checked: !item.checked } : item
+    ));
+  };
+
+  const deleteShoppingItem = (id) => {
+    setShoppingList(shoppingList.filter(item => item.id !== id));
+  };
+
+  const regeneratePlan = () => {
+    if(window.confirm("確定要重新生成本週計畫嗎？")) {
+      setWeekPlan(generateInitialPlan());
+    }
+  };
+
+  const getFilteredRecipes = () => {
+    let filtered = RECIPE_DB.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (selectedSlot) {
+        const currentMealType = weekPlan[selectedSlot.dayIndex].meals[selectedSlot.mealIndex].type;
+        if (currentMealType === 'Breakfast' || currentMealType === 'Brunch') {
+            filtered = filtered.filter(r => BREAKFAST_ONLY_NAMES.includes(r.name));
+        }
+    }
+    return filtered;
+  };
+
+  if (weekPlan.length === 0) return <div className="p-10 text-center">Loading Plan...</div>;
+
+  return (
+    <div className="max-w-md mx-auto bg-gray-50 min-h-screen font-sans text-slate-800 pb-24">
+      
+      {/* Header */}
+      <div className="bg-white p-6 rounded-b-[2rem] shadow-sm mb-6">
+        <div className="flex justify-center items-center gap-2 mb-6">
+          <div className="p-2 bg-emerald-100 rounded-lg">
+             <Flame className="w-6 h-6 text-emerald-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+            DietPlanner <span className="text-emerald-600">Pro</span>
+          </h1>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-emerald-50 rounded-2xl p-4 flex flex-col items-center justify-center border border-emerald-100">
+            <span className="text-xs font-bold text-emerald-600 mb-1 uppercase tracking-wider">TDEE 目標</span>
+            <span className="text-2xl font-extrabold text-slate-800">{USER_STATS.tdee} <span className="text-sm font-normal text-slate-500">kcal</span></span>
+          </div>
+          <div className="bg-purple-50 rounded-2xl p-4 flex flex-col items-center justify-center border border-purple-100">
+            <span className="text-xs font-bold text-purple-600 mb-1 uppercase tracking-wider">輕斷食限制</span>
+            <span className="text-2xl font-extrabold text-slate-800">{USER_STATS.target_fast} <span className="text-sm font-normal text-slate-500">kcal</span></span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="px-4">
+        
+        {/* VIEW: PLAN */}
+        {view === 'plan' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-end px-2">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Calendar className="w-5 h-5" /> 本週計畫
+              </h2>
+              <button onClick={regeneratePlan} className="text-xs text-gray-400 flex items-center gap-1 hover:text-emerald-600">
+                <RefreshCw className="w-3 h-3" /> 重新生成
+              </button>
+            </div>
+
+            {weekPlan.map((day, dIdx) => {
+              const stats = dailyStats[dIdx];
+              return (
+                <div key={dIdx} className={`bg-white rounded-3xl shadow-sm overflow-hidden border-2 transition-all duration-300 ${day.isFast ? 'border-purple-200' : 'border-transparent'}`}>
+                  
+                  {/* Day Header */}
+                  <div className={`p-4 flex justify-between items-center ${day.isFast ? 'bg-purple-50' : (day.isWeekend ? 'bg-orange-50' : 'bg-white')}`}>
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-bold text-slate-800">{day.day}</span>
+                        <span className="text-xs font-medium text-slate-400">{day.fullDay}</span>
+                      </div>
+                      {day.isWeekend && <span className="text-[10px] font-bold text-orange-500 bg-orange-100 px-2 py-0.5 rounded-full">休息日</span>}
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1">
+                      <button 
+                        onClick={() => toggleFastDay(dIdx)}
+                        className={`text-xs px-3 py-1 rounded-full font-bold transition-colors ${day.isFast ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-400'}`}
+                      >
+                        {day.isFast ? '輕斷食 ON' : '輕斷食 OFF'}
+                      </button>
+                      <div className={`text-xs font-bold ${stats.isOver ? 'text-red-500' : 'text-emerald-600'}`}>
+                        {stats.totalCal} / {stats.target} kcal
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Water Tracker */}
+                  <div className="px-4 py-2 bg-blue-50/50 flex items-center justify-between border-t border-b border-gray-100">
+                    <div className="flex items-center gap-2 text-blue-400">
+                      <Droplets className="w-4 h-4 fill-current" />
+                      <span className="text-xs font-bold">飲水 (ml)</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => updateWater(dIdx, -200)} className="w-6 h-6 rounded-full bg-white text-blue-500 shadow-sm flex items-center justify-center hover:bg-blue-100"><Minus className="w-3 h-3" /></button>
+                      <span className="font-bold text-blue-600 w-10 text-center">{day.water}</span>
+                      <button onClick={() => updateWater(dIdx, 200)} className="w-6 h-6 rounded-full bg-white text-blue-500 shadow-sm flex items-center justify-center hover:bg-blue-100"><Plus className="w-3 h-3" /></button>
+                    </div>
+                  </div>
+
+                  {/* Meals */}
+                  <div className="p-4 space-y-4">
+                    {day.meals.map((meal, mIdx) => (
+                      <div key={mIdx} className="relative">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">{meal.type}</span>
+                          <button 
+                            onClick={() => { setSelectedSlot({ dayIndex: dIdx, mealIndex: mIdx }); setView('recipes'); }}
+                            className="text-[10px] text-emerald-600 font-bold hover:underline"
+                          >
+                            更換餐點
+                          </button>
+                        </div>
+                        
+                        {/* Meal Card Logic */}
+                        {meal.isFastMeal ? (
+                            // Fasting Meal Card
+                            <div className={`rounded-2xl p-3 border transition-all ${meal.skipped ? 'bg-gray-100 border-dashed border-gray-300 opacity-60' : 'bg-purple-50 border-purple-100'}`}>
+                                <div className="flex justify-between items-start">
+                                    <div className="flex-1">
+                                        <h4 className={`font-bold mb-1 ${meal.skipped ? 'text-gray-500 line-through' : 'text-purple-900'}`}>{meal.name}</h4>
+                                        {!meal.skipped && (
+                                            <div className="text-xs text-purple-700 leading-relaxed">
+                                                {meal.desc}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Skip Button for Dinner */}
+                                    {meal.type === 'Dinner' && (
+                                        <button 
+                                            onClick={() => toggleSkipMeal(dIdx, mIdx)}
+                                            className={`ml-2 px-2 py-1 rounded-lg text-[10px] font-bold border ${meal.skipped ? 'bg-gray-200 text-gray-600 border-gray-300' : 'bg-white text-purple-600 border-purple-200 hover:bg-purple-100'}`}
+                                        >
+                                            {meal.skipped ? '恢復' : 'Skip'}
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="mt-2 text-right text-xs font-bold text-purple-400">
+                                    {meal.skipped ? '0' : meal.cal} kcal
+                                </div>
+                            </div>
+                        ) : (
+                            // Normal Meal Card
+                            <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100">
+                                <h4 className="font-bold text-slate-700 mb-2 truncate">{meal.recipe.name}</h4>
+                                <div className="text-xs text-slate-500 mb-3 leading-relaxed bg-white p-2 rounded-lg border border-gray-100">
+                                    <span className="font-bold text-emerald-600">建議: </span>
+                                    {meal.recipe.variants[meal.size].text}
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <div className="flex bg-white rounded-lg border border-gray-200 p-1 shadow-sm">
+                                    {['L', 'M', 'H'].map(size => (
+                                        <button
+                                        key={size}
+                                        onClick={() => changeSize(dIdx, mIdx, size)}
+                                        className={`w-8 h-6 text-xs font-bold rounded-md transition-all
+                                            ${meal.size === size 
+                                            ? (size === 'L' ? 'bg-green-500 text-white' : size === 'M' ? 'bg-blue-500 text-white' : 'bg-orange-500 text-white') 
+                                            : 'text-gray-400 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                        {size}
+                                        </button>
+                                    ))}
+                                    </div>
+                                    <div className="text-xs font-bold text-slate-400">
+                                    ~{meal.recipe.variants[meal.size].cal} kcal
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* VIEW: RECIPES */}
+        {view === 'recipes' && (
+          <div className="space-y-4 pt-2">
+             <div className="sticky top-0 bg-gray-50 pb-4 z-10">
+                <div className="flex gap-2 items-center mb-4">
+                    <button onClick={() => setView('plan')} className="p-2 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <ArrowLeft className="w-5 h-5 text-gray-600" />
+                    </button>
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                        <input 
+                            type="text" 
+                            placeholder="搜尋食譜..." 
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <h2 className="text-lg font-bold text-slate-800 px-1">
+                    {selectedSlot && (weekPlan[selectedSlot.dayIndex].meals[selectedSlot.mealIndex].type === 'Breakfast' || weekPlan[selectedSlot.dayIndex].meals[selectedSlot.mealIndex].type === 'Brunch') 
+                        ? "選擇早餐" 
+                        : "選擇餐點"}
+                </h2>
+             </div>
+            
+            <div className="grid gap-3">
+              {getFilteredRecipes().map(recipe => (
+                <button 
+                    key={recipe.id} 
+                    onClick={() => selectRecipe(recipe)}
+                    className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-left hover:border-emerald-400 transition-colors group"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                        {recipe.category}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-500" />
+                  </div>
+                  <h3 className="font-bold text-slate-800 mb-1">{recipe.name}</h3>
+                  <div className="text-xs text-gray-400">
+                    M號: ~{recipe.variants.M.cal} kcal
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* VIEW: SHOPPING LIST */}
+        {view === 'shopping' && (
+          <div className="space-y-6 pt-2">
+             <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5" /> 購物清單
+                </h2>
+                <span className="text-xs text-gray-400">手動輸入</span>
+             </div>
+
+             <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
+                <div className="flex gap-2 mb-4">
+                    <input 
+                        type="text" 
+                        placeholder="輸入食材 (例如: 雞胸肉 500g)"
+                        className="flex-1 px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-emerald-500"
+                        value={newItemText}
+                        onChange={(e) => setNewItemText(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && addShoppingItem()}
+                    />
+                    <button 
+                        onClick={addShoppingItem}
+                        className="bg-emerald-500 text-white p-3 rounded-xl hover:bg-emerald-600 shadow-md shadow-emerald-200"
+                    >
+                        <Plus className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {shoppingList.length === 0 ? (
+                    <div className="text-center py-10 text-gray-400 text-sm">
+                        清單是空的，請新增項目。<br/>
+                        <span className="text-xs opacity-70">建議參考食譜中的 L/M/H 用量輸入。</span>
+                    </div>
+                ) : (
+                    <ul className="space-y-2">
+                        {shoppingList.map(item => (
+                            <li key={item.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                                <button 
+                                    onClick={() => toggleShoppingItem(item.id)}
+                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${item.checked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 text-transparent'}`}
+                                >
+                                    <Check className="w-3 h-3" />
+                                </button>
+                                <span className={`flex-1 text-sm font-medium ${item.checked ? 'text-gray-400 line-through' : 'text-slate-700'}`}>
+                                    {item.text}
+                                </span>
+                                <button 
+                                    onClick={() => deleteShoppingItem(item.id)}
+                                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+             </div>
+             
+             <div className="bg-blue-50 p-4 rounded-2xl text-xs text-blue-800 leading-relaxed">
+                <p className="font-bold mb-1 flex items-center gap-1"><Info className="w-3 h-3"/> 提示：</p>
+                查看食譜時，請留意你選擇的份量 (L/M/H)。輕斷食日的食材（如粟米、雞蛋）也請記得加入清單。
+             </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-around items-center z-20 max-w-md mx-auto">
+        <button 
+            onClick={() => setView('plan')}
+            className={`flex flex-col items-center gap-1 ${view === 'plan' ? 'text-emerald-600' : 'text-gray-400'}`}
+        >
+            <Calendar className="w-6 h-6" />
+            <span className="text-[10px] font-bold">計畫</span>
+        </button>
+        <button 
+            onClick={() => setView('shopping')}
+            className={`flex flex-col items-center gap-1 ${view === 'shopping' ? 'text-emerald-600' : 'text-gray-400'}`}
+        >
+            <ShoppingCart className="w-6 h-6" />
+            <span className="text-[10px] font-bold">購物</span>
+        </button>
+      </div>
+
+    </div>
+  );
+}
