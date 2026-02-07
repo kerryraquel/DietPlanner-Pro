@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DietPlanner Pro</title>
     
+    <!-- 設定 iOS 主畫面圖示 (Web App Icon) -->
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/kerryraquel/DietPlanner-Pro/779a5e3897b6b56bd41cb881843ddead207b6b05/healthy-food-logo-template-vector.jpg">
+    <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/kerryraquel/DietPlanner-Pro/779a5e3897b6b56bd41cb881843ddead207b6b05/healthy-food-logo-template-vector.jpg">
+    
+    <!-- 設定 iOS Web App 模式 (移除瀏覽器網址列) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -17,6 +25,9 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
             background-color: #f9fafb; /* 淺灰背景 */
             color: #1f2937;
+            /* 針對 iOS 安全區域調整 */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
         /* 隱藏捲軸但保持功能 */
         .no-scrollbar::-webkit-scrollbar {
@@ -48,13 +59,14 @@
             target_normal: 1350 
         };
 
-        // --- 食譜資料 (保持不變) ---
+        // --- 食譜資料 ---
         const FASTING_MENU = {
             Breakfast: { name: "輕斷食早餐", desc: "一隻雞蛋 + 200ml 牛奶 / 無糖乳酪", cal: 205 },
             Lunch: { name: "輕斷食午餐", desc: "半條粟米 + 100g 雞/牛肉 + 200g 蔬菜", cal: 290 },
             Dinner: { name: "蔬菜湯", desc: "清湯底 + 大量蔬菜 (無澱粉)", cal: 60 }
         };
 
+        // 已加入新菜式
         const RAW_MAIN_LIST = [
             "Cobb Salad", "蝦仁芋絲青瓜雞蛋沙律", "Spicy Salmon poke bowl", "Miso Mushroom Coconut Milk Udon", 
             "Caesar Salad with chicken", "Shepherd’s Pie", "洋蔥木耳炒雞蛋", "意式蔬菜湯", "Toscana Salmon", 
@@ -75,7 +87,9 @@
             "蒸水蛋 + 半拳粗糧 + 半拳蛋白質+ 炒蔬菜", "椰菜紅蘿蔔絲炒雞蛋（雞/牛肉 Optional）", 
             "Shrimp Avocado Lettuce Boats", "蝦仁芋絲西蘭花炒蛋", "Cucumber and Avocado Sandwich", 
             "Italian Frittata", "清蒸鱸魚+炒蔬菜", "日式鯖魚定食 （可選蒟蒻飯）", "滑蛋蝦仁蓋飯 （可選蒟蒻飯）", 
-            "檸檬手撕雞千張或蒟蒻麵配烤蔬菜", "韓式泡菜豆腐蔬菜鍋", "墨西哥雞肉碗"
+            "檸檬手撕雞千張或蒟蒻麵配烤蔬菜", "韓式泡菜豆腐蔬菜鍋", "墨西哥雞肉碗",
+            "香煎雞腿蔬菜扁豆", "越式鮮蝦雜錦春卷", "藤椒牛肉粒炒時蔬", "清炖白蘿蔔牛肉湯", 
+            "清炒蔬菜（200-250g）", "絲瓜雞蛋湯"
         ];
 
         const BREAKFAST_ONLY_NAMES = [
@@ -88,7 +102,7 @@
             "Overnight rolled oats + milk + small amount of fruit"
         ];
 
-        // --- 邏輯函數 (保持不變) ---
+        // --- 邏輯函數 ---
         const generateRecipeDB = () => {
             const allNames = new Set([...RAW_MAIN_LIST, ...BREAKFAST_ONLY_NAMES]);
             const db = [];
@@ -96,9 +110,11 @@
                 const lowerName = name.toLowerCase();
                 let category = "主食";
                 let template = "StirFry"; 
+                
+                // 分類邏輯
                 if (lowerName.includes("salad") || lowerName.includes("沙律") || lowerName.includes("poke") || lowerName.includes("bowl")) { category = "沙律/輕食"; template = "Salad"; }
                 else if (lowerName.includes("soup") || lowerName.includes("湯") || lowerName.includes("鍋") || lowerName.includes("stew")) { category = "湯品/鍋物"; template = "Soup"; }
-                else if (lowerName.includes("sandwich") || lowerName.includes("wrap") || lowerName.includes("三文治") || lowerName.includes("卷餅") || lowerName.includes("boats")) { category = "輕食/麵包"; template = "Sandwich"; }
+                else if (lowerName.includes("sandwich") || lowerName.includes("wrap") || lowerName.includes("三文治") || lowerName.includes("卷餅") || lowerName.includes("春卷") || lowerName.includes("boats")) { category = "輕食/麵包"; template = "Sandwich"; }
                 else if (lowerName.includes("oats") || lowerName.includes("yogurt") || lowerName.includes("乳酪") || lowerName.includes("fruit") || lowerName.includes("cake") || lowerName.includes("蛋糕")) { category = "早餐"; template = "BreakfastBowl"; }
                 else if (lowerName.includes("pasta") || lowerName.includes("udon") || lowerName.includes("麵") || lowerName.includes("飯")) { category = "麵飯"; template = "CarbMain"; }
 
@@ -107,12 +123,20 @@
                 if (template === "Soup") { baseCal.L = 220; baseCal.M = 400; baseCal.H = 600; }
                 if (template === "Salad") { baseCal.L = 250; baseCal.M = 420; baseCal.H = 620; }
 
+                // 特殊菜式卡路里調整
                 if (name === "南瓜牛奶雞蛋糕") {
                     const specificText = "貝貝南瓜+蛋+奶+代糖蒸30分。冷藏過夜(抗性澱粉)，早餐翻叮";
                     variants.L = { cal: 250, text: "半個: " + specificText };
                     variants.M = { cal: 350, text: "一個: " + specificText };
                     variants.H = { cal: 450, text: "大個/加堅果: " + specificText };
-                } else {
+                } 
+                else if (name.includes("清炒蔬菜")) {
+                    // 純蔬菜特別處理 (低卡)
+                    variants.L = { cal: 90, text: "少油清炒 (150g)" };
+                    variants.M = { cal: 140, text: "正常油量 (250g)" };
+                    variants.H = { cal: 200, text: "加肉碎/蠔油 (300g)" };
+                }
+                else {
                     switch (template) {
                         case "Salad":
                             variants.L = { cal: baseCal.L, text: "大量蔬菜底 + 蛋白質(80g) + 醋汁 (走澱粉/堅果)" };
@@ -125,8 +149,8 @@
                             variants.H = { cal: baseCal.H, text: "濃湯底/加椰奶 + 肉類 + 飯/麵包 + 芝士" };
                             break;
                         case "Sandwich":
-                            variants.L = { cal: baseCal.L, text: "生菜包代替麵包/餅皮 + 餡料 + 走醬" };
-                            variants.M = { cal: baseCal.M, text: "全麥麵包1片/餅皮1張 + 正常餡料 + 少量醬" };
+                            variants.L = { cal: baseCal.L, text: "生菜包/米紙卷代替麵包 + 餡料 + 走醬" };
+                            variants.M = { cal: baseCal.M, text: "全麥麵包1片/餅皮/春卷皮 + 正常餡料 + 少量醬" };
                             variants.H = { cal: baseCal.H, text: "麵包2片/大餅皮 + 雙倍餡料 + 芝士/牛油果" };
                             break;
                         case "BreakfastBowl":
@@ -310,18 +334,17 @@
             return (
                 <div className="max-w-md mx-auto bg-white min-h-screen shadow-2xl overflow-hidden flex flex-col font-sans">
                     
-                    {/* Header Area (還原圖片風格) */}
+                    {/* Header Area */}
                     <div className="bg-white pt-6 pb-2 px-4 flex flex-col items-center justify-center">
                         <div className="flex items-center gap-3 mb-6">
-                            {/* Logo 圖片 */}
+                            {/* Logo 圖片 - 使用相同的 GitHub Raw 連結 */}
                             <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm">
                                 <img 
-                                    src="healthy-food-logo-template-vector.jpg" 
+                                    src="https://raw.githubusercontent.com/kerryraquel/DietPlanner-Pro/779a5e3897b6b56bd41cb881843ddead207b6b05/healthy-food-logo-template-vector.jpg" 
                                     alt="Logo" 
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                         e.target.style.display = 'none';
-                                        // 如果圖片載入失敗，顯示一個圖示代替
                                         e.target.parentNode.innerHTML = '<div class="w-full h-full bg-emerald-100 flex items-center justify-center text-emerald-600"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 9l5 5 10-10"/></svg></div>';
                                     }}
                                 />
@@ -331,7 +354,7 @@
                             </h1>
                         </div>
 
-                        {/* 兩張大的數據卡片 (還原圖片風格) */}
+                        {/* 兩張大的數據卡片 */}
                         <div className="grid grid-cols-2 gap-4 w-full mb-2">
                             {/* TDEE 卡片 */}
                             <div className="bg-green-50 rounded-2xl p-5 flex flex-col items-center justify-center border border-green-100 shadow-sm">
