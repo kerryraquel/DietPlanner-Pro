@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DietPlanner Pro - High Flux Edition</title>
+    <title>DietPlanner Pro - Metabolic Reset</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -31,8 +31,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-
-        /* Removed "past" style as we now sort starting from Today */
         
         .corner-badge {
             position: absolute;
@@ -121,7 +119,7 @@
     <div class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 pt-4 pb-2 px-4">
         <div class="flex justify-between items-center mb-3">
             <div>
-                <h1 class="text-lg font-bold text-gray-900 tracking-tight">DietPlanner <span class="text-orange-500">Flux</span></h1>
+                <h1 class="text-lg font-bold text-gray-900 tracking-tight">DietPlanner <span class="text-orange-500">Pro</span></h1>
             </div>
             
             <button onclick="window.toggleMenu()" class="group relative w-9 h-9 rounded-full transition-transform active:scale-95">
@@ -155,7 +153,7 @@
             <!-- Top Row: Title, Nut, Toggle -->
             <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center space-x-2">
-                    <h2 class="text-base font-bold text-gray-900">今日能量通量</h2>
+                    <h2 class="text-base font-bold text-gray-900">今日能量目標</h2>
                     <span id="day-type-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"></span>
                 </div>
                 
@@ -169,7 +167,7 @@
                     <!-- Mode Toggle -->
                     <label class="relative inline-flex items-center cursor-pointer ml-1">
                         <input type="checkbox" id="mode-toggle" class="sr-only peer" onchange="window.toggleMode()">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
                     </label>
                 </div>
             </div>
@@ -177,7 +175,7 @@
             <div class="flex justify-between items-end mb-4">
                 <div class="text-[10px] font-medium text-gray-400" id="mode-label">Standard</div>
                 <div class="text-2xl font-bold text-gray-900 leading-none tracking-tight">
-                    <span id="cal-current">0</span><span class="text-xs text-gray-400 font-normal"> / <span id="cal-target">1450</span></span>
+                    <span id="cal-current">0</span><span class="text-xs text-gray-400 font-normal"> / <span id="cal-target">1225</span></span>
                 </div>
             </div>
 
@@ -187,7 +185,7 @@
                 <div>
                     <div class="flex justify-between text-[10px] mb-1">
                         <span class="font-medium text-gray-500">蛋白質 (Protein)</span>
-                        <span class="text-gray-400"><span id="prot-current" class="text-gray-900 font-bold">0</span> / <span id="prot-target">120g</span></span>
+                        <span class="text-gray-400"><span id="prot-current" class="text-gray-900 font-bold">0</span> / <span id="prot-target">115g</span></span>
                     </div>
                     <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                         <div id="prot-bar" class="h-full rounded-full bg-blue-500 transition-all duration-700" style="width: 0%"></div>
@@ -196,8 +194,8 @@
                 <!-- Carbs -->
                 <div>
                     <div class="flex justify-between text-[10px] mb-1">
-                        <span class="font-medium text-gray-500">原型澱粉 (Potato/Pumpkin)</span>
-                        <span class="text-gray-400"><span id="carb-current" class="text-gray-900 font-bold">0</span> / <span id="carb-target">150g</span></span>
+                        <span class="font-medium text-gray-500">碳水化合物 (Carbs)</span>
+                        <span class="text-gray-400"><span id="carb-current" class="text-gray-900 font-bold">0</span> / <span id="carb-target">100g</span></span>
                     </div>
                     <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                         <div id="carb-bar" class="h-full rounded-full bg-yellow-400 transition-all duration-700" style="width: 0%"></div>
@@ -255,11 +253,8 @@
             run: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`
         };
 
-        // --- Data & Blacklist Logic ---
-        const BLACKLIST = ['藜麥', '糙米', '蕎麥麵', '苦瓜', '橄欖', '秋葵', '天貝', 'quinoa', 'brown rice', 'soba', 'bitter melon', 'olive', 'okra', 'tempeh'];
-
         const RAW_RECIPES = [
-            "Cobb Salad", "蝦仁芋絲青瓜雞蛋沙律", "Spicy Salmon poke bowl", "Miso Mushroom Coconut Milk Udon", "Caesar Salad with chicken",
+            "Cajun香料雞髀飯", "蝦仁芋絲青瓜雞蛋沙律", "Spicy Salmon poke bowl", "Miso Mushroom Coconut Milk Udon", "Caesar Salad with chicken",
             "Shepherd’s Pie", "洋蔥木耳炒雞蛋", "意式蔬菜湯", "Toscana Salmon", "花椒青椒炒雞丁",
             "蘋果炖豬扒", "酸辣薯絲燘牛肉", "地中海蝦翠玉瓜彩椒", "法式菌菇炖雞", "芝士牛肉蔬菜鍋",
             "黑松露蘑菇蝦", "白蘑菇炒雞髀肉", "娃娃菜番茄粉絲燜牛肉", "番茄牛肉豆腐煲", "粉絲節瓜蝦米",
@@ -278,25 +273,18 @@
             "奧爾良雞胸丁洋蔥炒彩椒", "奧爾良雞胸條", "生菜蕃茄仔沙律", "洋蔥彩椒炒豬肝", "煙三文魚滑蛋車厘茄全麥多士",
             "蒜香牛柳粒蘆筍配薯仔", "蝦仁肉碎椰菜絲炒粉絲煲", "微波爐版蒜蓉蝦仁粉絲煲", "微波爐板韓式泡菜雞肉鍋蛋煲", "微波爐版梅花肉酸湯小火鍋",
             "微波爐版咖喱洋蔥紅蘿蔔椰菜花魚丸烏冬", "微波爐版蕃茄包沙魚魔芋絲豆腐鍋", "微波爐版照燒雞腿肉蔬菜煲", "Overnight rolled oats + milk + fruit + chia seeds",
-            "清蒸豆腐娃娃菜肉餅"
+            "清蒸豆腐娃娃菜肉餅", "法式巴斯克炖雞配蒟蒻米 (Poulet Basquaise)"
         ];
 
         function sanitizeName(name) {
             let n = name;
-            n = n.replace(/糙米/g, '薯仔');
-            n = n.replace(/藜麥/g, '粟米');
-            n = n.replace(/蕎麥麵/g, '烏冬');
-            n = n.replace(/天貝/g, '硬豆腐');
-            n = n.replace(/苦瓜/g, '西蘭花');
-            n = n.replace(/秋葵/g, '翠玉瓜');
-            n = n.replace(/帶子/g, '蝦仁'); 
             return n;
         }
 
         function getCategory(name, type) {
             const n = name.toLowerCase();
             if (type === 'breakfast') return '早餐 (Breakfast)';
-            if (n.includes('雞') || n.includes('chicken')) return '雞肉料理 (Chicken)';
+            if (n.includes('雞') || n.includes('chicken') || n.includes('poulet')) return '雞肉料理 (Chicken)';
             if (n.includes('牛') || n.includes('beef') || n.includes('豬') || n.includes('pork') || n.includes('肉')) return '紅肉料理 (Beef/Pork)';
             if (n.includes('蝦') || n.includes('魚') || n.includes('salmon') || n.includes('shrimp')) return '海鮮料理 (Seafood)';
             return '素食/輕食 (Veggie/Light)';
@@ -305,130 +293,197 @@
         function generateSubtext(name, isLight, type) {
             const n = name.toLowerCase();
             if (type === 'breakfast') return '高蛋白早餐，穩定全日血糖。';
-            if (isLight) return '【低碳日】重點：澱粉量減半，但請確保走完 8000 步。';
-            if (n.includes('牛')) return '【高碳日】重點：請吃足薯仔/南瓜，這是你運動的燃料。';
-            return '【高碳日】重點：澱粉選擇已鎖定為薯仔/南瓜/粟米。';
+            
+            if (isLight) {
+                return '【減脂版 1225kcal】低卡高蛋白，使用蒟蒻/少油/瘦肉。';
+            } else {
+                return '【Refeed版 1500kcal】高碳水補充糖原，適量油脂。';
+            }
         }
 
-        // --- NEW PRECISE INGREDIENT LOGIC WITH POTATO/PUMPKIN FOCUS ---
-        function generateIngredients(name, isLight) {
+        // --- UPDATED INGREDIENT LOGIC FOR SPECIFIC RECIPES ---
+        function generateIngredients(name, isLight, type) {
             let ings = [];
             const n = name.toLowerCase();
             
-            const meatWeight = isLight ? '140g' : '170g'; 
-            const tofuWeight = isLight ? '半盒 (150g)' : '大半盒 (200g)';
-            const fishWeight = isLight ? '150g' : '180g';
-            const shrimpCount = isLight ? '12-15隻' : '18-20隻';
+            // --- 1. SPECIAL RECIPES FROM USER ---
             
-            // 1. Protein Logic
-            let protein = "";
+            // Cajun Chicken
+            if (n.includes('cajun') && n.includes('雞')) {
+                if (isLight) {
+                    return [
+                        '去皮雞髀肉 (150g)', '洋蔥 (40g) & 蒜蓉', '蒟蒻飯 (150g) 或 蒸薯仔 (150g)',
+                        '低脂牛奶 (1湯匙) 代替淡奶油', '噴油 (少許)', 'Cajun香料粉 & 檸檬汁'
+                    ];
+                } else {
+                    return [
+                        '去皮雞髀肉 (180g)', '洋蔥 (50g) & 蒜蓉', '白飯 (150g)',
+                        '淡奶油 (1湯匙)', '煮食油 (1茶匙)', 'Cajun香料粉 & 檸檬汁'
+                    ];
+                }
+            }
+
+            // Teriyaki Chicken (Microwave)
+            if (n.includes('照燒') && n.includes('雞') && n.includes('微波')) {
+                if (isLight) {
+                    return [
+                        '去皮雞胸 (100g)', '玉米粒 (80g)', '娃娃菜 (80g) & 胡蘿蔔 (50g)',
+                        '低鈉照燒醬 (5g) + 代糖 (1g)'
+                    ];
+                } else {
+                    return [
+                        '去骨雞腿排 (100g)', '玉米塊 (140g)', '娃娃菜 (70g) & 胡蘿蔔塊 (60g)',
+                        '照燒汁 (7g)'
+                    ];
+                }
+            }
+
+            // Roasted Cauliflower Romesco
+            if (n.includes('romesco') || (n.includes('烤') && n.includes('椰菜') && n.includes('sauce'))) {
+                if (isLight) {
+                    return [
+                        '椰菜花 (半顆/250g)', '紅甜椒 (2個)', '風乾番茄 (2片) & 烤杏仁 (15g)',
+                        '橄欖油 (1湯匙/10ml)', '米醋 & 煙燻甜椒粉'
+                    ];
+                } else {
+                    return [
+                        '椰菜花 (半顆/250g)', '紅甜椒 (2個)', '油浸番茄 (1/4杯) & 杏仁 (60g)',
+                        '橄欖油 (1/4杯/30ml)', '紅酒醋 & 煙燻甜椒粉'
+                    ];
+                }
+            }
+
+            // Toscana Salmon
+            if (n.includes('toscana') && n.includes('salmon')) {
+                if (isLight) {
+                    return [
+                        '三文魚排/去皮魚柳 (150g)', '菠菜 (50g) & 小番茄', '低脂牛奶 (150ml) 取代淡奶油',
+                        '橄欖油 (1/2茶匙)', '洋蔥 & 蒜'
+                    ];
+                } else {
+                    return [
+                        '三文魚排 (200g)', '菠菜 (50g) & 小番茄', '淡奶油 (100ml) + 牛奶 (100ml)',
+                        '橄欖油 (1湯匙) + 黃油 (10g)', '洋蔥 & 蒜'
+                    ];
+                }
+            }
+
+            // Apple Pork Chop
             if (n.includes('蘋果') && n.includes('豬')) {
-                protein = isLight ? '瘦豬扒 (130g, 去脂)' : '豬扒 (160g)';
-                ings.push(protein);
-                ings.push('蘋果 (1個) 切塊');
-            } 
-            else if (n.includes('泡菜') && n.includes('豆腐')) {
-                ings.push('嫩豆腐 (1盒/300g)');
-                ings.push(isLight ? '瘦肉片 (80g)' : '瘦肉片 (120g)');
-                ings.push('韓式泡菜 (100g)');
-            }
-            else if (n.includes('豆腐') || n.includes('tofu')) {
-                 if (n.includes('肉') || n.includes('雞') || n.includes('牛')) {
-                     ings.push(tofuWeight + ' 硬豆腐'); 
-                     ings.push(isLight ? '瘦肉/雞肉 (100g)' : '肉類 (130g)');
-                 } else {
-                     ings.push('硬豆腐 (1盒/300g)');
-                 }
-            }
-            else if (n.includes('雞') || n.includes('chicken')) {
-                ings.push(isLight ? `去皮雞胸/腿肉 (${meatWeight})` : `雞腿肉 (${meatWeight})`);
-            } else if (n.includes('牛') || n.includes('beef')) {
-                ings.push(isLight ? `瘦牛柳 (${meatWeight})` : `牛柳粒 (${meatWeight})`);
-            } else if (n.includes('蝦') || n.includes('shrimp')) {
-                ings.push(`大蝦仁 (${shrimpCount})`);
-            } else if (n.includes('魚') || n.includes('fish') || n.includes('salmon') || n.includes('三文魚')) {
-                ings.push(isLight ? `魚柳 (${fishWeight})` : `魚柳/三文魚 (${fishWeight})`);
-            } else if (n.includes('肉餅') || n.includes('pork') || n.includes('豬')) {
-                ings.push(`瘦肉碎 (${meatWeight})`);
-            } else if (n.includes('蛋') || n.includes('egg')) {
-                if (isLight) ings.push('雞蛋 (2隻)', '蛋白 (1隻)'); 
-                else ings.push('雞蛋 (2隻)', '蛋白 (2隻)');
-            } else {
-                ings.push(`優質蛋白 (${meatWeight})`);
-            }
-
-            // 2. Vegetable Logic
-            let vegAdded = false;
-            if (n.includes('蘑菇') || n.includes('mushroom')) { ings.push('蘑菇/金針菇 (150g)'); vegAdded = true; }
-            if (n.includes('西蘭花') || n.includes('broccoli')) { ings.push('西蘭花 (200g)'); vegAdded = true; }
-            if (n.includes('椰菜') || n.includes('cabbage')) { ings.push('椰菜絲 (200g)'); vegAdded = true; }
-            if (n.includes('娃娃菜')) { ings.push('娃娃菜 (200g)'); vegAdded = true; }
-            if (n.includes('蘆筍')) { ings.push('蘆筍 (150g)'); vegAdded = true; }
-            if (n.includes('番茄') || n.includes('tomato')) { ings.push('番茄 (2個)'); vegAdded = true; }
-            if (n.includes('青瓜') || n.includes('cucumber')) { ings.push('青瓜 (1條)'); vegAdded = true; }
-            
-            if (!vegAdded) {
-                if (n.includes('泡菜')) {
-                     ings.push('金針菇 (100g)');
-                     ings.push('娃娃菜 (150g)');
+                if (isLight) {
+                    return [
+                        '瘦豬柳 (120g)', '蘋果 (1個, 帶皮)', '西蘭花/抱子甘藍 (150g)',
+                        '赤藻糖醇 (5g) & 橄欖油 (1/2茶匙)'
+                    ];
                 } else {
-                    ings.push('時令蔬菜 (250g) - 必須吃足');
+                    return [
+                        '豬梅花肉 (150g)', '蘋果 (1個, 去皮)', '西蘭花/抱子甘藍 (150g)',
+                        '紅糖 (10g) & 黃油 (10g)'
+                    ];
                 }
             }
 
-            // 3. Carb Logic - STRICT POTATO/PUMPKIN/CORN
-            const starchOptions = ['蒸薯仔', '蒸南瓜', '甜粟米'];
-            const starchChoice = starchOptions[name.length % 3]; 
-
-            if (isLight) {
-                if (n.includes('粉絲') || n.includes('vermicelli')) {
-                    ings.push('龍口粉絲 (30g 乾重)');
-                } else if (n.includes('芋絲') || n.includes('konjac') || n.includes('蒟蒻')) {
-                    ings.push('芋絲/蒟蒻結 (1盒) + 南瓜 (100g)');
-                } else if (n.includes('wrap') || n.includes('三文治') || n.includes('sandwich') || n.includes('多士')) {
-                    ings.push('生菜葉 (代替麵包) + 粟米 (半條)');
-                } else if (n.includes('oats')) {
-                    ings.push('燕麥片 (30g)');
+            // Spicy Salmon Poke
+            if (n.includes('poke') && n.includes('salmon')) {
+                if (isLight) {
+                    return [
+                        '刺身級三文魚 (150g)', '熟米飯/花椰菜飯 (80g)', '牛油果 (50g)',
+                        '低脂希臘乳酪 (1湯匙) 取代蛋黃醬', '醬油 & 是拉差醬'
+                    ];
                 } else {
-                    ings.push(`${starchChoice} (100g) - 運動前吃`);
+                    return [
+                        '刺身級三文魚 (300g)', '熟米飯 (120g)', '牛油果 (100g)',
+                        '蛋黃醬 (2湯匙) & 醬油 & 是拉差醬'
+                    ];
                 }
-            } else {
-                const potatoPortion = '200g';
-                const pumpkinPortion = '250g';
-                const cornPortion = '1.5條';
-                
-                let selectedStarch = '';
-                if (starchChoice === '蒸薯仔') selectedStarch = `蒸薯仔 (${potatoPortion})`;
-                if (starchChoice === '蒸南瓜') selectedStarch = `蒸南瓜 (${pumpkinPortion})`;
-                if (starchChoice === '甜粟米') selectedStarch = `甜粟米 (${cornPortion})`;
+            }
 
-                if (n.includes('粉絲')) {
-                    ings.push('龍口粉絲 (50g 乾重)');
-                } else if (n.includes('芋絲') || n.includes('konjac')) {
-                    ings.push(`芋絲 (1盒) + ${selectedStarch}`); 
-                } else if (n.includes('wrap') || n.includes('餅')) {
-                    ings.push('墨西哥餅皮 (1張) + 粟米 (1條)');
-                } else if (n.includes('三文治') || n.includes('sandwich') || n.includes('多士')) {
-                    ings.push('全麥多士 (2片)');
-                } else if (n.includes('oats')) {
-                    ings.push('燕麥片 (50g)');
+            // Green Pepper Chicken
+            if (n.includes('花椒') && n.includes('雞')) {
+                if (isLight) {
+                    return [
+                        '雞胸肉 (150g)', '青西椒 (100g) & 辣椒', '噴油 (少許)',
+                        '醃料: 生抽, 蠔油, 澱粉 (減半)'
+                    ];
                 } else {
-                    ings.push(`${selectedStarch} (代替白飯)`);
+                    return [
+                        '雞胸肉/去皮雞髀肉 (180g)', '青西椒 (80g) & 辣椒', '炒油 (1湯匙)',
+                        '醃料: 生抽, 蠔油, 澱粉, 油'
+                    ];
+                }
+            }
+
+            // Miso Udon
+            if (n.includes('miso') || (n.includes('味噌') && n.includes('烏冬'))) {
+                if (isLight) {
+                    return [
+                        '瘦豬里肌 (80g) & 板豆腐 (80g)', '蒟蒻烏冬 (120g)', '椰奶 (50ml) + 無糖豆奶 (50ml)',
+                        '混合蘑菇 (200g) & 西蘭花 (100g)', '橄欖油 (1/2湯匙)'
+                    ];
+                } else {
+                    return [
+                        '豬里肌片 (100g) & 板豆腐 (100g)', '烏冬 (150g)', '椰奶 (100ml)',
+                        '混合蘑菇 (200g) & 西蘭花 (80g)', '橄欖油 (1湯匙)'
+                    ];
                 }
             }
             
-            // 4. Fat/Cooking Oil
-            ings.push(isLight ? '煮食油 (1茶匙)' : '煮食油 (2茶匙)');
+            // Poulet Basquaise
+            if (n.includes('basquaise') || n.includes('巴斯克')) {
+                if (isLight) {
+                     return [
+                        '去皮雞腿肉 (140g)', '蒟蒻米 (1包) - 拌汁食', '甜椒 & 洋蔥 & 蒜 (150g)',
+                        '西蘭花 (150g)', '煮食油 (1茶匙)'
+                    ];
+                } else {
+                     return [
+                        '雞腿肉 (170g)', '白飯 (150g)', '甜椒 & 洋蔥 & 蒜 (150g)',
+                        '巴約納火腿 (1片)', '煮食油 (1.5茶匙)'
+                    ];
+                }
+            }
+
+            // --- 2. GENERIC LOGIC FOR OTHER 90+ RECIPES ---
+            
+            const meatWeight = isLight ? '120-140g (瘦肉/去皮)' : '150-180g'; 
+            const oilAmount = isLight ? '1茶匙/噴油' : '1湯匙';
+            const carbSource = isLight ? '蒟蒻麵/芋絲/半拳薯仔' : '白飯/烏冬/薯仔 (1碗)';
+
+            // Protein
+            if (n.includes('雞') || n.includes('chicken')) ings.push(`雞肉: ${meatWeight}`);
+            else if (n.includes('牛') || n.includes('beef')) ings.push(`牛肉: ${meatWeight}`);
+            else if (n.includes('豬') || n.includes('pork') || n.includes('肉餅')) ings.push(`豬肉: ${meatWeight}`);
+            else if (n.includes('蝦') || n.includes('shrimp')) ings.push(isLight ? '蝦仁 (12-15隻)' : '蝦仁 (18-20隻)');
+            else if (n.includes('魚') || n.includes('fish') || n.includes('salmon')) ings.push(`魚柳: ${meatWeight}`);
+            else if (n.includes('豆腐') || n.includes('tofu')) ings.push(isLight ? '硬豆腐 (半盒) + 瘦肉 (80g)' : '硬豆腐 (1盒) + 肉類 (100g)');
+            else if (n.includes('蛋') || n.includes('egg')) ings.push(isLight ? '雞蛋 (2隻) + 蛋白 (1隻)' : '雞蛋 (2隻) + 蛋白 (2隻)');
+
+            // Veg
+            if (n.includes('西蘭花')) ings.push('西蘭花 (200g)');
+            else if (n.includes('椰菜')) ings.push('椰菜 (200g)');
+            else if (n.includes('蘑菇')) ings.push('蘑菇 (200g)');
+            else ings.push('時令蔬菜 (250g)');
+
+            // Carb & Oil (Generic)
+            if (type !== 'dinner' || !isLight) { // Allow carbs for lunch or High Flux dinner
+                if (n.includes('烏冬')) ings.push(isLight ? '蒟蒻烏冬 (1包)' : '烏冬 (1包)');
+                else if (n.includes('粉絲')) ings.push(isLight ? '龍口粉絲 (30g)' : '龍口粉絲 (50g)');
+                else if (n.includes('薯仔')) ings.push(isLight ? '薯仔 (150g)' : '薯仔 (200g)');
+                else ings.push(carbSource);
+            } else {
+                 ings.push('<span class="text-red-500">晚餐無澱粉 (只食菜肉)</span>');
+            }
+
+            ings.push(`油脂: ${oilAmount}`);
 
             return ings;
         }
 
         function generateTip(name, isLight) {
-            const n = name.toLowerCase();
             if (isLight) {
-                return '貼士：低碳日仍需能量，請在飯後務必走動 15 分鐘。';
+                return '減脂日 (1225kcal)：專注蛋白質與纖維，晚餐避免澱粉，保持輕盈。';
             } else {
-                return '貼士：高碳日請放心吃薯仔/南瓜，這是為了提升代謝。';
+                return 'Refeed日 (1500kcal)：增加碳水攝取 (飯/薯仔)，幫助代謝回升，放鬆心情。';
             }
         }
 
@@ -440,7 +495,7 @@
             }
             
             let tags = ['standard'];
-            if (n.includes('salad') || n.includes('soup') || n.includes('konjac') || n.includes('芋絲') || n.includes('粉絲') || n.includes('微波爐') || n.includes('湯') || n.includes('light') || n.includes('豆腐')) {
+            if (n.includes('salad') || n.includes('soup') || n.includes('konjac') || n.includes('芋絲') || n.includes('粉絲') || n.includes('微波爐') || n.includes('湯') || n.includes('light') || n.includes('豆腐') || n.includes('basquaise') || n.includes('巴斯克')) {
                 tags.push('light');
             }
 
@@ -473,14 +528,20 @@
                 let lunch = pick(mainOpts);
                 let dinner = pick(mainOpts);
                 
+                // Force specific recipes on some days for variety
+                if (i === 1) lunch = RECIPES.find(r => r.name.includes('Cajun')) || lunch;
+                if (i === 3) dinner = RECIPES.find(r => r.name.includes('照燒')) || dinner;
+
                 let attempts = 0;
                 while (dinner.id === lunch.id && attempts < 10) {
                     dinner = pick(mainOpts);
                     attempts++;
                 }
 
-                const isWeekend = (i === 0 || i === 6);
-                const defaultLight = (i === 1 || i === 4 || i === 0);
+                // Logic: Saturday is default Refeed (High Flux), others are Diet (Low Flux)
+                // User can toggle this manually later.
+                const isRefeedDay = (i === 6); // Saturday
+                const isLight = !isRefeedDay; 
 
                 appState.weeklyData.push({
                     plan: {
@@ -489,13 +550,13 @@
                         dinner: dinner
                     },
                     skipped: { 
-                        breakfast: isWeekend, 
+                        breakfast: false, 
                         lunch: false, 
                         dinner: false 
                     },
                     water: i === appState.currentDayIndex ? 3 : 0, 
                     brazilNut: true,
-                    isLight: defaultLight,
+                    isLight: isLight, // True = 1225kcal, False = 1500kcal Refeed
                     swapped: { breakfast: false, lunch: false, dinner: false }
                 });
             }
@@ -504,7 +565,7 @@
         // --- Global Functions ---
         window.toggleMode = function() {
             const dayData = appState.weeklyData[appState.currentDayIndex];
-            dayData.isLight = !dayData.isLight;
+            dayData.isLight = !dayData.isLight; // Toggle between Diet and Refeed
             renderStats();
             renderMeals();
             renderDaySlider(); 
@@ -592,7 +653,6 @@
             const enDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
             
-            // Generate rolling indices starting from Today
             let html = '';
             for (let i = 0; i < 7; i++) {
                 const dayIndex = (appState.startDayIndex + i) % 7;
@@ -600,6 +660,7 @@
                 const active = dayIndex === appState.currentDayIndex;
                 const isLight = appState.weeklyData[dayIndex].isLight;
                 
+                // Green for Diet Day (1225), Orange for Refeed Day (1500)
                 const cornerColor = isLight ? 'bg-emerald-100' : 'bg-orange-100';
                 const iconColor = isLight ? 'text-emerald-500' : 'text-orange-500';
                 const icon = isLight ? ICONS.leaf : ICONS.fire;
@@ -607,9 +668,7 @@
                 let cardClass = 'day-card-new cursor-pointer ';
                 if (active) cardClass += 'day-card-active ';
 
-                // Label logic: First card is "Today"
                 let label = enDays[dayIndex];
-                if (i === 0) label = "Today";
 
                 html += `
                     <button onclick="window.setDay(${dayIndex})" class="${cardClass}">
@@ -639,17 +698,16 @@
 
         function renderStats() {
             const dayData = appState.weeklyData[appState.currentDayIndex];
-            const isLight = dayData.isLight;
-            const isWeekend = (appState.currentDayIndex === 0 || appState.currentDayIndex === 6);
+            const isLight = dayData.isLight; // True = Diet, False = Refeed
 
             const badge = document.getElementById('day-type-badge');
-            badge.innerText = isLight ? 'LOW FLUX' : 'HIGH FLUX';
+            badge.innerText = isLight ? '減脂日 (DIET)' : 'REFEED DAY';
             badge.className = `px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isLight ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'}`;
 
-            // Adjusted Targets for High Energy Flux
-            const target = isLight ? 1250 : 1450;
-            const pTarget = isLight ? 105 : 120; 
-            const cTarget = isLight ? 110 : 150; 
+            // --- NEW TARGETS ---
+            const target = isLight ? 1225 : 1500;
+            const pTarget = 115; // Constant protein
+            const cTarget = isLight ? 100 : 150; // Higher carbs on Refeed
 
             let total = 0, pTotal = 0, cTotal = 0;
 
@@ -657,35 +715,31 @@
                 total += 33; pTotal += 1; cTotal += 0.5;
             }
 
+            // Distribute calories roughly per meal
             const mealConfigs = {
-                normal: { breakfast: 350, lunch: 550, dinner: 550 },
-                light: { breakfast: 325, lunch: 462, dinner: 462 }, // Adjusted for 1250
-                weekend_normal: { breakfast: 0, lunch: 725, dinner: 725 },
-                weekend_light: { breakfast: 0, lunch: 625, dinner: 625 }
+                diet: { breakfast: 325, lunch: 450, dinner: 450 }, // ~1225
+                refeed: { breakfast: 400, lunch: 550, dinner: 550 } // ~1500
             };
 
-            let configType = isLight ? 'light' : 'normal';
-            if (isWeekend) configType = isLight ? 'weekend_light' : 'weekend_normal';
-            
-            const config = {...mealConfigs[configType]};
+            const config = isLight ? {...mealConfigs.diet} : {...mealConfigs.refeed};
 
             if (dayData.brazilNut) {
-                const deductionPerMeal = Math.ceil(33 / (isWeekend ? 2 : 3));
-                if (!isWeekend) config.breakfast -= deductionPerMeal;
-                config.lunch -= deductionPerMeal;
-                config.dinner -= deductionPerMeal;
+                config.lunch -= 11;
+                config.dinner -= 11;
+                config.breakfast -= 11;
             }
 
             ['breakfast', 'lunch', 'dinner'].forEach(t => {
                 if (!dayData.skipped[t]) {
                     const cal = Math.max(0, config[t]);
                     total += cal;
+                    // Rough macro estimation based on calories
                     if (isLight) {
-                         pTotal += (cal * 0.40) / 4; 
-                         cTotal += (cal * 0.20) / 4; 
+                         pTotal += (cal * 0.40) / 4; // High protein ratio
+                         cTotal += (cal * 0.30) / 4; // Moderate carb
                     } else {
                          pTotal += (cal * 0.30) / 4; 
-                         cTotal += (cal * 0.45) / 4; 
+                         cTotal += (cal * 0.45) / 4; // Higher carb ratio
                     }
                 }
             });
@@ -693,14 +747,14 @@
             const toggleLabel = document.getElementById('mode-label');
             const toggleInput = document.getElementById('mode-toggle');
             
-            toggleLabel.innerText = isLight ? '輕量日 (1250)' : '高能日 (1450)';
+            toggleLabel.innerText = isLight ? '減脂模式 (1225)' : 'Refeed 模式 (1500)';
             toggleLabel.className = `text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-teal-600' : 'text-orange-600'}`;
-            toggleInput.checked = isLight;
+            toggleInput.checked = !isLight; // Checked = Refeed (Orange)
 
-            // STRATEGY TEXT UPDATE FOR FLUX
+            // STRATEGY TEXT UPDATE
             document.getElementById('strategy-desc').innerHTML = isLight 
-                ? '<span class="font-bold text-teal-700">輕量日 (1250)：</span>目標 8000 步。澱粉已轉為少量南瓜/薯仔。飯後請走動 15 分鐘以穩定血糖。' 
-                : '<span class="font-bold text-orange-700">高能日 (1450)：</span>目標 8000 步。白飯已全數替換為薯仔/南瓜。請吃足份量以維持代謝。';
+                ? '<span class="font-bold text-teal-700">減脂日 (1225 kcal)：</span>溫和熱量缺口。重點：高蛋白 (115g)、低油脂 (1茶匙)、晚餐無澱粉。' 
+                : '<span class="font-bold text-orange-700">Refeed 日 (1500 kcal)：</span>回復至 TDEE 水平。重點：增加碳水 (白飯/薯仔) 至 150g，幫助代謝 Reset，放鬆身心。';
 
             document.getElementById('cal-current').innerText = Math.round(total);
             document.getElementById('cal-target').innerText = target;
@@ -785,31 +839,25 @@
 
         function renderMeals() {
             const dayData = appState.weeklyData[appState.currentDayIndex];
-            const isLight = dayData.isLight;
-            const isWeekend = (appState.currentDayIndex === 0 || appState.currentDayIndex === 6);
+            const isLight = dayData.isLight; // True = Diet, False = Refeed
             
             const types = [
-                { k: 'breakfast', l: isWeekend ? '早餐 (週末)' : '早餐', icon: ICONS.coffee },
-                { k: 'lunch', l: isWeekend ? '早午餐 (Brunch)' : '午餐', icon: ICONS.sun },
+                { k: 'breakfast', l: '早餐', icon: ICONS.coffee },
+                { k: 'lunch', l: '午餐', icon: ICONS.sun },
                 { k: 'dinner', l: '晚餐', icon: ICONS.moon }
             ];
 
              const mealConfigs = {
-                normal: { breakfast: 350, lunch: 550, dinner: 550 },
-                light: { breakfast: 325, lunch: 462, dinner: 462 },
-                weekend_normal: { breakfast: 0, lunch: 725, dinner: 725 },
-                weekend_light: { breakfast: 0, lunch: 625, dinner: 625 }
+                diet: { breakfast: 325, lunch: 450, dinner: 450 },
+                refeed: { breakfast: 400, lunch: 550, dinner: 550 }
             };
             
-            let configType = isLight ? 'light' : 'normal';
-            if (isWeekend) configType = isLight ? 'weekend_light' : 'weekend_normal';
-            const config = {...mealConfigs[configType]};
+            const config = isLight ? {...mealConfigs.diet} : {...mealConfigs.refeed};
 
             if (dayData.brazilNut) {
-                const deductionPerMeal = Math.ceil(33 / (isWeekend ? 2 : 3));
-                if (!isWeekend) config.breakfast -= deductionPerMeal;
-                config.lunch -= deductionPerMeal;
-                config.dinner -= deductionPerMeal;
+                config.lunch -= 11;
+                config.dinner -= 11;
+                config.breakfast -= 11;
             }
 
             const html = types.map(t => {
@@ -818,21 +866,7 @@
                 const swapped = dayData.swapped[t.k];
                 const displayCals = Math.max(0, config[t.k]);
                 
-                // WEEKEND FASTING CARDIO LOGIC
-                if (isWeekend && t.k === 'breakfast' && skipped) {
-                     return `
-                    <div class="meal-card p-4 relative overflow-hidden meal-skipped bg-orange-50/50">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center space-x-2 text-orange-600">
-                                <span class="text-xl">${ICONS.run}</span>
-                                <span class="text-sm font-bold">🔥 空腹快走 40mins (脂肪燃燒)</span>
-                            </div>
-                            <button onclick="window.toggleSkip('${t.k}')" class="text-xs text-gray-400 font-medium">取消有氧</button>
-                        </div>
-                    </div>`;
-                }
-
-                const ingredients = generateIngredients(recipe.name, isLight);
+                const ingredients = generateIngredients(recipe.name, isLight, t.k);
                 const tip = generateTip(recipe.name, isLight);
                 const subtext = generateSubtext(recipe.name, isLight, t.k);
 
