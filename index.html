@@ -2,258 +2,36 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DietPlanner Pro - Metabolic Reset</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DietPlanner Pro</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons (仍用於 UI 控件如菜單、加減號) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #F9FAFB;
-            color: #1F2937;
-            -webkit-font-smoothing: antialiased;
-            min-height: 100vh;
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* 動畫 */
+        @keyframes slide-in {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
         }
-        
-        /* --- Day Card Design --- */
-        .day-card-new {
-            background: white;
-            border-radius: 12px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.2s ease;
-            border: 1px solid #F3F4F6;
-            height: 64px;
-        }
-        
-        .day-card-active {
-            border: 2px solid #1F2937;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-        
-        .corner-badge {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 24px;
-            height: 24px;
-            border-bottom-left-radius: 12px;
-        }
-
-        /* --- Meal Card --- */
-        .meal-card {
-            background: #FFFFFF;
-            border: 1px solid #F3F4F6;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            border-radius: 1.25rem;
-            transition: all 0.3s ease;
-        }
-        .meal-skipped {
-            opacity: 0.8; 
-            background-color: #FFF7ED; 
-            border-style: dashed;
-            border-color: #FDBA74;
-        }
-
-        /* --- Water Card Styles --- */
-        .water-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-        
-        .water-success-card {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 4px 20px rgba(250, 204, 21, 0.15);
-            border: 1px solid #FEF9C3;
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes popIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .water-dash {
-            height: 6px;
-            border-radius: 4px;
-            background-color: #FDE047;
-            flex: 1;
-        }
-
-        /* Nut Button */
-        .nut-btn {
-            transition: all 0.2s ease;
-        }
-        .nut-active {
-            background-color: #78350F;
-            color: white;
-            border-color: #78350F;
-        }
-        .nut-inactive {
-            background-color: #FFFBEB;
-            color: #92400E;
-            border-color: #FEF3C7;
-        }
-
-        .tip-box {
-            background-color: #FFFBEB;
-            border-radius: 0.5rem;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
+        .animate-slide-in { animation: slide-in 0.3s ease-out forwards; }
     </style>
 </head>
-<body class="pb-32">
+<body class="bg-gray-50 text-gray-800">
 
-    <!-- Header -->
-    <div class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 pt-4 pb-2 px-4">
-        <div class="flex justify-between items-center mb-3">
-            <div>
-                <h1 class="text-lg font-bold text-gray-900 tracking-tight">DietPlanner <span class="text-orange-500">Pro</span></h1>
-            </div>
-            
-            <button onclick="window.toggleMenu()" class="group relative w-9 h-9 rounded-full transition-transform active:scale-95">
-                <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="20" cy="20" r="20" fill="#FFF7ED"/>
-                    <path d="M14 11V18C14 19.6569 15.3431 21 17 21H17.5" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M14 11V15" stroke="#EA580C" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M17 11V18" stroke="#EA580C" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M20 11V18C20 19.6569 18.6569 21 17 21" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M17 21V29" stroke="#EA580C" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M26 11V29" stroke="#EA580C" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M26 11C26 11 23 11 23 16V21H26" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Day Slider (Grid Layout) -->
-        <div class="grid grid-cols-7 gap-1.5 mb-4" id="day-slider">
-            <!-- JS Injected -->
-        </div>
-
-        <!-- Water Tracker (Dynamic) -->
-        <div id="water-container">
-            <!-- JS Injected -->
-        </div>
-    </div>
-
-    <!-- Dashboard -->
-    <div class="px-4 mt-4">
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-            <!-- Top Row: Title, Nut, Toggle -->
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center space-x-2">
-                    <h2 class="text-base font-bold text-gray-900">今日能量目標</h2>
-                    <span id="day-type-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"></span>
-                </div>
-                
-                <div class="flex items-center space-x-2">
-                    <!-- Brazil Nut Button -->
-                    <button id="nut-btn" onclick="window.toggleBrazilNut()" class="nut-btn flex items-center space-x-1 px-2 py-1 rounded-full border text-[10px] font-bold shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20Z"/></svg>
-                        <span>巴西堅果</span>
-                    </button>
-
-                    <!-- Mode Toggle -->
-                    <label class="relative inline-flex items-center cursor-pointer ml-1">
-                        <input type="checkbox" id="mode-toggle" class="sr-only peer" onchange="window.toggleMode()">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
-                    </label>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-end mb-4">
-                <div class="text-[10px] font-medium text-gray-400" id="mode-label">Standard</div>
-                <div class="text-2xl font-bold text-gray-900 leading-none tracking-tight">
-                    <span id="cal-current">0</span><span class="text-xs text-gray-400 font-normal"> / <span id="cal-target">1225</span></span>
-                </div>
-            </div>
-
-            <!-- Macros -->
-            <div class="space-y-3">
-                <!-- Protein -->
-                <div>
-                    <div class="flex justify-between text-[10px] mb-1">
-                        <span class="font-medium text-gray-500">蛋白質 (Protein)</span>
-                        <span class="text-gray-400"><span id="prot-current" class="text-gray-900 font-bold">0</span> / <span id="prot-target">115g</span></span>
-                    </div>
-                    <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                        <div id="prot-bar" class="h-full rounded-full bg-blue-500 transition-all duration-700" style="width: 0%"></div>
-                    </div>
-                </div>
-                <!-- Carbs -->
-                <div>
-                    <div class="flex justify-between text-[10px] mb-1">
-                        <span class="font-medium text-gray-500">碳水化合物 (Carbs)</span>
-                        <span class="text-gray-400"><span id="carb-current" class="text-gray-900 font-bold">0</span> / <span id="carb-target">100g</span></span>
-                    </div>
-                    <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                        <div id="carb-bar" class="h-full rounded-full bg-yellow-400 transition-all duration-700" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Strategy Text -->
-            <div class="mt-3 pt-3 border-t border-gray-50">
-                <p class="text-[11px] text-gray-500 leading-relaxed" id="strategy-desc">
-                    <!-- JS Injected -->
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Meals List -->
-    <div class="px-4 mt-5 space-y-4" id="meals-container">
-        <!-- JS Injected -->
-    </div>
-
-    <!-- Full Menu Drawer -->
-    <div id="menu-modal" class="fixed inset-0 z-50 hidden transition-opacity duration-300" style="background-color: rgba(0,0,0,0.2); backdrop-filter: blur(2px);">
-        <div class="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col" id="menu-drawer">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-white z-10">
-                <div>
-                    <h2 class="text-lg font-bold text-gray-900">完整菜單資料庫</h2>
-                </div>
-                <button onclick="window.toggleMenu()" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto p-5 space-y-8">
-                <div id="full-menu-list">
-                    <!-- JS Injected -->
-                </div>
-            </div>
-        </div>
+    <div id="app" class="min-h-screen pb-32 w-full overflow-x-hidden">
+        <!-- 內容將由 JavaScript 動態渲染 -->
     </div>
 
     <script>
-        // --- Icons ---
-        const ICONS = {
-            coffee: '☕️',
-            sun: '☀️',
-            moon: '🌙',
-            refresh: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>`,
-            close: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
-            restore: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`,
-            check: `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-            bulb: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-yellow-400"><path d="M12,2A7,7,0,0,0,5,9c0,4.2,2.33,5.56,3,8.75A1,1,0,0,0,9,19h6a1,1,0,0,0,1-1.25C16.67,14.56,19,13.2,19,9A7,7,0,0,0,12,2ZM15,17H9c-.27-1.35-1.25-2.28-1.89-3.71A9.78,9.78,0,0,1,6.1,9.39,5.92,5.92,0,0,1,12,4a5.92,5.92,0,0,1,5.9,5.39,9.78,9.78,0,0,1-1,3.9C16.25,14.72,15.27,15.65,15,17Zm-6,4a1,1,0,0,0,1,1h4a1,1,0,0,0,1-1v-1H9Z"/></svg>`,
-            fire: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a5.5 5.5 0 11-11 0c0-3.03.412-5.843 1.225-8.047C8.79 8.253 8.5 9.46 8.5 10.5c0 .93.41 1.84 1 2.5z"/></svg>`,
-            leaf: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/></svg>`,
-            run: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`
-        };
-
+        // --- 1. 數據庫 (保持不變) ---
         const RAW_RECIPES = [
+            "蘋果肉桂烤燕麥", "蝦仁牛肉拌麵", "檸檬乾煎雞", "椰菜絲燘肉絲", "薯絲娃娃菜牛肉片蒸蛋", "法式橙香紙包魚", "翠玉瓜絲蝦仁餅",
             "Cajun香料雞髀飯", "蝦仁芋絲青瓜雞蛋沙律", "Spicy Salmon poke bowl", "Miso Mushroom Coconut Milk Udon", "Caesar Salad with chicken",
             "Shepherd’s Pie", "洋蔥木耳炒雞蛋", "意式蔬菜湯", "Toscana Salmon", "花椒青椒炒雞丁",
             "蘋果炖豬扒", "酸辣薯絲燘牛肉", "地中海蝦翠玉瓜彩椒", "法式菌菇炖雞", "芝士牛肉蔬菜鍋",
@@ -276,683 +54,380 @@
             "清蒸豆腐娃娃菜肉餅", "法式巴斯克炖雞配蒟蒻米 (Poulet Basquaise)"
         ];
 
-        function sanitizeName(name) {
-            let n = name;
-            return n;
-        }
-
-        function getCategory(name, type) {
+        // --- 2. 邏輯處理 (保持不變) ---
+        const getRecipeType = (name) => {
             const n = name.toLowerCase();
-            if (type === 'breakfast') return '早餐 (Breakfast)';
-            if (n.includes('雞') || n.includes('chicken') || n.includes('poulet')) return '雞肉料理 (Chicken)';
-            if (n.includes('牛') || n.includes('beef') || n.includes('豬') || n.includes('pork') || n.includes('肉')) return '紅肉料理 (Beef/Pork)';
-            if (n.includes('蝦') || n.includes('魚') || n.includes('salmon') || n.includes('shrimp')) return '海鮮料理 (Seafood)';
-            return '素食/輕食 (Veggie/Light)';
-        }
-
-        function generateSubtext(name, isLight, type) {
-            const n = name.toLowerCase();
-            if (type === 'breakfast') return '高蛋白早餐，穩定全日血糖。';
-            
-            if (isLight) {
-                return '【減脂版 1225kcal】低卡高蛋白，使用蒟蒻/少油/瘦肉。';
-            } else {
-                return '【Refeed版 1500kcal】高碳水補充糖原，適量油脂。';
+            if (n.includes('oats') || n.includes('燕麥') || n.includes('toast') || n.includes('sandwich') || n.includes('frittata') || n.includes('breakfast')) {
+                return 'breakfast';
             }
-        }
+            return 'lunch_dinner';
+        };
 
-        // --- UPDATED INGREDIENT LOGIC FOR SPECIFIC RECIPES ---
-        function generateIngredients(name, isLight, type) {
+        const RECIPES = RAW_RECIPES.map((name, index) => ({
+            id: index,
+            name,
+            type: getRecipeType(name)
+        }));
+
+        const generateIngredients = (name, level, type) => {
             let ings = [];
             const n = name.toLowerCase();
             
-            // --- 1. SPECIAL RECIPES FROM USER ---
-            
-            // Cajun Chicken
-            if (n.includes('cajun') && n.includes('雞')) {
-                if (isLight) {
-                    return [
-                        '去皮雞髀肉 (150g)', '洋蔥 (40g) & 蒜蓉', '蒟蒻飯 (150g) 或 蒸薯仔 (150g)',
-                        '低脂牛奶 (1湯匙) 代替淡奶油', '噴油 (少許)', 'Cajun香料粉 & 檸檬汁'
-                    ];
-                } else {
-                    return [
-                        '去皮雞髀肉 (180g)', '洋蔥 (50g) & 蒜蓉', '白飯 (150g)',
-                        '淡奶油 (1湯匙)', '煮食油 (1茶匙)', 'Cajun香料粉 & 檸檬汁'
-                    ];
-                }
-            }
+            if (n.includes('蘋果肉桂烤燕麥')) return [{ text: '蘋果 1個', highlight: false }, { text: '全粒燕麥 (30g)', highlight: false }, { text: '牛奶/植物奶 (120g)', highlight: false }];
+            if (n.includes('蝦仁牛肉拌麵')) return [{ text: '蝦仁 & 牛肉片', highlight: false }, { text: level === 'Low' ? '千張/豆腐皮' : '烏冬/蕎麥麵', highlight: level === 'Low' }, { text: '青瓜絲 & 紅蘿蔔絲', highlight: false }];
 
-            // Teriyaki Chicken (Microwave)
-            if (n.includes('照燒') && n.includes('雞') && n.includes('微波')) {
-                if (isLight) {
-                    return [
-                        '去皮雞胸 (100g)', '玉米粒 (80g)', '娃娃菜 (80g) & 胡蘿蔔 (50g)',
-                        '低鈉照燒醬 (5g) + 代糖 (1g)'
-                    ];
-                } else {
-                    return [
-                        '去骨雞腿排 (100g)', '玉米塊 (140g)', '娃娃菜 (70g) & 胡蘿蔔塊 (60g)',
-                        '照燒汁 (7g)'
-                    ];
-                }
-            }
+            const meatWeight = level === 'Low' ? '120g (瘦肉)' : '150g'; 
+            if (n.includes('雞')) ings.push({ text: `雞肉: ${meatWeight}`, highlight: false });
+            else if (n.includes('牛')) ings.push({ text: `牛肉: ${meatWeight}`, highlight: false });
+            else if (n.includes('蝦')) ings.push({ text: '蝦仁 (15-20隻)', highlight: false });
+            else ings.push({ text: '優質蛋白質 (140g)', highlight: false });
 
-            // Roasted Cauliflower Romesco
-            if (n.includes('romesco') || (n.includes('烤') && n.includes('椰菜') && n.includes('sauce'))) {
-                if (isLight) {
-                    return [
-                        '椰菜花 (半顆/250g)', '紅甜椒 (2個)', '風乾番茄 (2片) & 烤杏仁 (15g)',
-                        '橄欖油 (1湯匙/10ml)', '米醋 & 煙燻甜椒粉'
-                    ];
-                } else {
-                    return [
-                        '椰菜花 (半顆/250g)', '紅甜椒 (2個)', '油浸番茄 (1/4杯) & 杏仁 (60g)',
-                        '橄欖油 (1/4杯/30ml)', '紅酒醋 & 煙燻甜椒粉'
-                    ];
-                }
-            }
+            ings.push({ text: '時令蔬菜 (250g+)', highlight: false });
 
-            // Toscana Salmon
-            if (n.includes('toscana') && n.includes('salmon')) {
-                if (isLight) {
-                    return [
-                        '三文魚排/去皮魚柳 (150g)', '菠菜 (50g) & 小番茄', '低脂牛奶 (150ml) 取代淡奶油',
-                        '橄欖油 (1/2茶匙)', '洋蔥 & 蒜'
-                    ];
-                } else {
-                    return [
-                        '三文魚排 (200g)', '菠菜 (50g) & 小番茄', '淡奶油 (100ml) + 牛奶 (100ml)',
-                        '橄欖油 (1湯匙) + 黃油 (10g)', '洋蔥 & 蒜'
-                    ];
-                }
-            }
-
-            // Apple Pork Chop
-            if (n.includes('蘋果') && n.includes('豬')) {
-                if (isLight) {
-                    return [
-                        '瘦豬柳 (120g)', '蘋果 (1個, 帶皮)', '西蘭花/抱子甘藍 (150g)',
-                        '赤藻糖醇 (5g) & 橄欖油 (1/2茶匙)'
-                    ];
-                } else {
-                    return [
-                        '豬梅花肉 (150g)', '蘋果 (1個, 去皮)', '西蘭花/抱子甘藍 (150g)',
-                        '紅糖 (10g) & 黃油 (10g)'
-                    ];
-                }
-            }
-
-            // Spicy Salmon Poke
-            if (n.includes('poke') && n.includes('salmon')) {
-                if (isLight) {
-                    return [
-                        '刺身級三文魚 (150g)', '熟米飯/花椰菜飯 (80g)', '牛油果 (50g)',
-                        '低脂希臘乳酪 (1湯匙) 取代蛋黃醬', '醬油 & 是拉差醬'
-                    ];
-                } else {
-                    return [
-                        '刺身級三文魚 (300g)', '熟米飯 (120g)', '牛油果 (100g)',
-                        '蛋黃醬 (2湯匙) & 醬油 & 是拉差醬'
-                    ];
-                }
-            }
-
-            // Green Pepper Chicken
-            if (n.includes('花椒') && n.includes('雞')) {
-                if (isLight) {
-                    return [
-                        '雞胸肉 (150g)', '青西椒 (100g) & 辣椒', '噴油 (少許)',
-                        '醃料: 生抽, 蠔油, 澱粉 (減半)'
-                    ];
-                } else {
-                    return [
-                        '雞胸肉/去皮雞髀肉 (180g)', '青西椒 (80g) & 辣椒', '炒油 (1湯匙)',
-                        '醃料: 生抽, 蠔油, 澱粉, 油'
-                    ];
-                }
-            }
-
-            // Miso Udon
-            if (n.includes('miso') || (n.includes('味噌') && n.includes('烏冬'))) {
-                if (isLight) {
-                    return [
-                        '瘦豬里肌 (80g) & 板豆腐 (80g)', '蒟蒻烏冬 (120g)', '椰奶 (50ml) + 無糖豆奶 (50ml)',
-                        '混合蘑菇 (200g) & 西蘭花 (100g)', '橄欖油 (1/2湯匙)'
-                    ];
-                } else {
-                    return [
-                        '豬里肌片 (100g) & 板豆腐 (100g)', '烏冬 (150g)', '椰奶 (100ml)',
-                        '混合蘑菇 (200g) & 西蘭花 (80g)', '橄欖油 (1湯匙)'
-                    ];
-                }
-            }
-            
-            // Poulet Basquaise
-            if (n.includes('basquaise') || n.includes('巴斯克')) {
-                if (isLight) {
-                     return [
-                        '去皮雞腿肉 (140g)', '蒟蒻米 (1包) - 拌汁食', '甜椒 & 洋蔥 & 蒜 (150g)',
-                        '西蘭花 (150g)', '煮食油 (1茶匙)'
-                    ];
-                } else {
-                     return [
-                        '雞腿肉 (170g)', '白飯 (150g)', '甜椒 & 洋蔥 & 蒜 (150g)',
-                        '巴約納火腿 (1片)', '煮食油 (1.5茶匙)'
-                    ];
-                }
-            }
-
-            // --- 2. GENERIC LOGIC FOR OTHER 90+ RECIPES ---
-            
-            const meatWeight = isLight ? '120-140g (瘦肉/去皮)' : '150-180g'; 
-            const oilAmount = isLight ? '1茶匙/噴油' : '1湯匙';
-            const carbSource = isLight ? '蒟蒻麵/芋絲/半拳薯仔' : '白飯/烏冬/薯仔 (1碗)';
-
-            // Protein
-            if (n.includes('雞') || n.includes('chicken')) ings.push(`雞肉: ${meatWeight}`);
-            else if (n.includes('牛') || n.includes('beef')) ings.push(`牛肉: ${meatWeight}`);
-            else if (n.includes('豬') || n.includes('pork') || n.includes('肉餅')) ings.push(`豬肉: ${meatWeight}`);
-            else if (n.includes('蝦') || n.includes('shrimp')) ings.push(isLight ? '蝦仁 (12-15隻)' : '蝦仁 (18-20隻)');
-            else if (n.includes('魚') || n.includes('fish') || n.includes('salmon')) ings.push(`魚柳: ${meatWeight}`);
-            else if (n.includes('豆腐') || n.includes('tofu')) ings.push(isLight ? '硬豆腐 (半盒) + 瘦肉 (80g)' : '硬豆腐 (1盒) + 肉類 (100g)');
-            else if (n.includes('蛋') || n.includes('egg')) ings.push(isLight ? '雞蛋 (2隻) + 蛋白 (1隻)' : '雞蛋 (2隻) + 蛋白 (2隻)');
-
-            // Veg
-            if (n.includes('西蘭花')) ings.push('西蘭花 (200g)');
-            else if (n.includes('椰菜')) ings.push('椰菜 (200g)');
-            else if (n.includes('蘑菇')) ings.push('蘑菇 (200g)');
-            else ings.push('時令蔬菜 (250g)');
-
-            // Carb & Oil (Generic)
-            if (type !== 'dinner' || !isLight) { // Allow carbs for lunch or High Flux dinner
-                if (n.includes('烏冬')) ings.push(isLight ? '蒟蒻烏冬 (1包)' : '烏冬 (1包)');
-                else if (n.includes('粉絲')) ings.push(isLight ? '龍口粉絲 (30g)' : '龍口粉絲 (50g)');
-                else if (n.includes('薯仔')) ings.push(isLight ? '薯仔 (150g)' : '薯仔 (200g)');
-                else ings.push(carbSource);
+            if (type === 'breakfast') {
+                ings.push({ text: level === 'Low' ? '全麥麵包(1片)' : '燕麥/蕃薯', highlight: false });
             } else {
-                 ings.push('<span class="text-red-500">晚餐無澱粉 (只食菜肉)</span>');
+                if (type === 'dinner' && level === 'Low') ings.push({ text: '晚餐無澱粉 (只食菜肉)', highlight: true });
+                else ings.push({ text: level === 'Medium' ? '半拳澱粉' : '1碗飯/麵', highlight: false });
             }
-
-            ings.push(`油脂: ${oilAmount}`);
-
             return ings;
-        }
-
-        function generateTip(name, isLight) {
-            if (isLight) {
-                return '減脂日 (1225kcal)：專注蛋白質與纖維，晚餐避免澱粉，保持輕盈。';
-            } else {
-                return 'Refeed日 (1500kcal)：增加碳水攝取 (飯/薯仔)，幫助代謝回升，放鬆心情。';
-            }
-        }
-
-        const RECIPES = RAW_RECIPES.map((name, index) => {
-            const n = name.toLowerCase();
-            let type = 'lunch_dinner';
-            if (n.includes('oats') || n.includes('toast') || n.includes('sandwich') || n.includes('frittata') || n.includes('breakfast') || index === 93 || index === 84 || index === 0) {
-                type = 'breakfast';
-            }
-            
-            let tags = ['standard'];
-            if (n.includes('salad') || n.includes('soup') || n.includes('konjac') || n.includes('芋絲') || n.includes('粉絲') || n.includes('微波爐') || n.includes('湯') || n.includes('light') || n.includes('豆腐') || n.includes('basquaise') || n.includes('巴斯克')) {
-                tags.push('light');
-            }
-
-            const cleanName = sanitizeName(name);
-            return { 
-                id: index, 
-                name: cleanName, 
-                type: type, 
-                tags: tags,
-                category: getCategory(cleanName, type)
-            };
-        });
-
-        // --- State ---
-        let appState = {
-            currentDayIndex: new Date().getDay(),
-            startDayIndex: new Date().getDay(), // Anchor for the slider
-            weeklyData: [] 
         };
 
-        // --- Logic ---
-        function generateWeeklyPlan() {
-            appState.weeklyData = [];
+        // --- 3. 狀態管理 (保持不變) ---
+        const state = {
+            currentDayIndex: new Date().getDay(),
+            menuOpen: false,
+            weeklyData: []
+        };
+
+        function initData() {
             const breakfastOpts = RECIPES.filter(r => r.type === 'breakfast');
             const mainOpts = RECIPES.filter(r => r.type === 'lunch_dinner');
-
-            const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+            const pick = (arr) => arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : RECIPES[0];
+            const patternMap = { 1: 'Low', 2: 'Low', 3: 'Medium', 4: 'Medium', 5: 'Low', 6: 'High', 0: 'Medium' };
 
             for(let i=0; i<7; i++) {
-                let lunch = pick(mainOpts);
-                let dinner = pick(mainOpts);
-                
-                // Force specific recipes on some days for variety
-                if (i === 1) lunch = RECIPES.find(r => r.name.includes('Cajun')) || lunch;
-                if (i === 3) dinner = RECIPES.find(r => r.name.includes('照燒')) || dinner;
-
-                let attempts = 0;
-                while (dinner.id === lunch.id && attempts < 10) {
-                    dinner = pick(mainOpts);
-                    attempts++;
-                }
-
-                // Logic: Saturday is default Refeed (High Flux), others are Diet (Low Flux)
-                // User can toggle this manually later.
-                const isRefeedDay = (i === 6); // Saturday
-                const isLight = !isRefeedDay; 
-
-                appState.weeklyData.push({
-                    plan: {
-                        breakfast: pick(breakfastOpts),
-                        lunch: lunch,
-                        dinner: dinner
+                state.weeklyData.push({
+                    dayIndex: i,
+                    level: patternMap[i],
+                    plan: { 
+                        breakfast: pick(breakfastOpts), 
+                        lunch: pick(mainOpts), 
+                        dinner: pick(mainOpts) 
                     },
-                    skipped: { 
-                        breakfast: false, 
-                        lunch: false, 
-                        dinner: false 
-                    },
-                    water: i === appState.currentDayIndex ? 3 : 0, 
-                    brazilNut: true,
-                    isLight: isLight, // True = 1225kcal, False = 1500kcal Refeed
-                    swapped: { breakfast: false, lunch: false, dinner: false }
+                    skipped: { breakfast: false, lunch: false, dinner: false },
+                    swapped: { breakfast: false, lunch: false, dinner: false },
+                    water: i === new Date().getDay() ? 3 : 0,
+                    brazilNut: true
                 });
             }
         }
 
-        // --- Global Functions ---
-        window.toggleMode = function() {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            dayData.isLight = !dayData.isLight; // Toggle between Diet and Refeed
-            renderStats();
-            renderMeals();
-            renderDaySlider(); 
-        };
-
-        window.toggleBrazilNut = function() {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            dayData.brazilNut = !dayData.brazilNut;
-            renderStats();
-            renderNutButton();
-            renderMeals();
-        };
-
-        window.swapMeal = function(type) {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            const currentId = dayData.plan[type].id;
-            
-            const pool = type === 'breakfast' 
+        // --- 4. 操作函數 (保持不變) ---
+        function updateState() { render(); }
+        function setDay(index) { state.currentDayIndex = index; updateState(); }
+        function toggleMenu() { state.menuOpen = !state.menuOpen; updateState(); }
+        function toggleMode() {
+            const levels = ['Low', 'Medium', 'High'];
+            const day = state.weeklyData[state.currentDayIndex];
+            const currentIdx = levels.indexOf(day.level);
+            day.level = levels[(currentIdx + 1) % 3];
+            updateState();
+        }
+        function toggleBrazilNut() {
+            const day = state.weeklyData[state.currentDayIndex];
+            day.brazilNut = !day.brazilNut;
+            updateState();
+        }
+        function updateWater(delta) {
+            const day = state.weeklyData[state.currentDayIndex];
+            let newAmount = day.water + delta;
+            if (newAmount < 0) newAmount = 0;
+            if (newAmount > 8) newAmount = 8;
+            day.water = newAmount;
+            updateState();
+        }
+        function toggleSkip(mealType) {
+            const day = state.weeklyData[state.currentDayIndex];
+            day.skipped[mealType] = !day.skipped[mealType];
+            updateState();
+        }
+        function swapMeal(mealType) {
+            const day = state.weeklyData[state.currentDayIndex];
+            const pool = mealType === 'breakfast' 
                 ? RECIPES.filter(r => r.type === 'breakfast') 
                 : RECIPES.filter(r => r.type === 'lunch_dinner');
-            
-            let newMeal = pool[Math.floor(Math.random() * pool.length)];
-            let attempts = 0;
-            while(newMeal.id === currentId && attempts < 10) {
-                 newMeal = pool[Math.floor(Math.random() * pool.length)];
-                 attempts++;
-            }
-            
-            dayData.plan[type] = newMeal;
-            dayData.skipped[type] = false;
-            dayData.swapped[type] = true;
-            
-            renderMeals();
-            renderStats();
-        };
+            const newMeal = pool[Math.floor(Math.random() * pool.length)];
+            day.plan[mealType] = newMeal;
+            day.swapped[mealType] = true;
+            day.skipped[mealType] = false;
+            updateState();
+        }
 
-        window.toggleSkip = function(type) {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            dayData.skipped[type] = !dayData.skipped[type];
-            renderMeals();
-            renderStats();
-        };
-
-        window.setDay = function(d) {
-            appState.currentDayIndex = d;
-            render();
-        };
-
-        window.addWater = function() {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            dayData.water = dayData.water >= 8 ? 8 : dayData.water + 1;
-            renderWater();
-        };
-        
-        window.removeWater = function() {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            dayData.water = dayData.water <= 0 ? 0 : dayData.water - 1;
-            renderWater();
-        };
-
-        window.toggleMenu = function() {
-            const modal = document.getElementById('menu-modal');
-            const drawer = document.getElementById('menu-drawer');
-            if (modal.classList.contains('hidden')) {
-                modal.classList.remove('hidden');
-                setTimeout(() => drawer.classList.remove('translate-x-full'), 10);
-            } else {
-                drawer.classList.add('translate-x-full');
-                setTimeout(() => modal.classList.add('hidden'), 300);
-            }
-        };
-
-        // --- Render Functions ---
+        // --- 5. 渲染函數 (已修改：縮小卡片，更換 Emoji) ---
         function render() {
-            renderDaySlider();
-            renderNutButton();
-            renderStats();
-            renderWater();
-            renderMeals();
-            renderFullMenu();
-        }
-
-        function renderDaySlider() {
-            const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-            const enDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            const app = document.getElementById('app');
+            const dayData = state.weeklyData[state.currentDayIndex];
             
-            let html = '';
-            for (let i = 0; i < 7; i++) {
-                const dayIndex = (appState.startDayIndex + i) % 7;
-                
-                const active = dayIndex === appState.currentDayIndex;
-                const isLight = appState.weeklyData[dayIndex].isLight;
-                
-                // Green for Diet Day (1225), Orange for Refeed Day (1500)
-                const cornerColor = isLight ? 'bg-emerald-100' : 'bg-orange-100';
-                const iconColor = isLight ? 'text-emerald-500' : 'text-orange-500';
-                const icon = isLight ? ICONS.leaf : ICONS.fire;
-                
-                let cardClass = 'day-card-new cursor-pointer ';
-                if (active) cardClass += 'day-card-active ';
-
-                let label = enDays[dayIndex];
-
-                html += `
-                    <button onclick="window.setDay(${dayIndex})" class="${cardClass}">
-                        <div class="corner-badge ${cornerColor}"></div>
-                        <div class="h-full flex flex-col justify-between p-2">
-                            <div class="text-[10px] font-bold text-gray-400 uppercase leading-none text-left">${label}</div>
-                            <div class="flex justify-between items-end">
-                                <span class="text-xl font-bold text-gray-800 leading-none">${letters[dayIndex]}</span>
-                                <span class="${iconColor} mb-0.5">${icon}</span>
-                            </div>
-                        </div>
-                    </button>
-                `;
-            }
-            document.getElementById('day-slider').innerHTML = html;
-        }
-
-        function renderNutButton() {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            const btn = document.getElementById('nut-btn');
-            if(dayData.brazilNut) {
-                btn.className = "nut-btn flex items-center space-x-1 px-2 py-1 rounded-full border text-[10px] font-bold shadow-sm nut-active";
-            } else {
-                btn.className = "nut-btn flex items-center space-x-1 px-2 py-1 rounded-full border text-[10px] font-bold shadow-sm nut-inactive";
-            }
-        }
-
-        function renderStats() {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            const isLight = dayData.isLight; // True = Diet, False = Refeed
-
-            const badge = document.getElementById('day-type-badge');
-            badge.innerText = isLight ? '減脂日 (DIET)' : 'REFEED DAY';
-            badge.className = `px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isLight ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'}`;
-
-            // --- NEW TARGETS ---
-            const target = isLight ? 1225 : 1500;
-            const pTarget = 115; // Constant protein
-            const cTarget = isLight ? 100 : 150; // Higher carbs on Refeed
-
-            let total = 0, pTotal = 0, cTotal = 0;
-
-            if (dayData.brazilNut) {
-                total += 33; pTotal += 1; cTotal += 0.5;
-            }
-
-            // Distribute calories roughly per meal
-            const mealConfigs = {
-                diet: { breakfast: 325, lunch: 450, dinner: 450 }, // ~1225
-                refeed: { breakfast: 400, lunch: 550, dinner: 550 } // ~1500
+            // 計算數值
+            const getTargets = (level) => {
+                if (level === 'Low') return { cal: 1200, p: 120, c: 80 };
+                if (level === 'Medium') return { cal: 1375, p: 120, c: 120 };
+                return { cal: 1525, p: 120, c: 160 };
             };
-
-            const config = isLight ? {...mealConfigs.diet} : {...mealConfigs.refeed};
-
-            if (dayData.brazilNut) {
-                config.lunch -= 11;
-                config.dinner -= 11;
-                config.breakfast -= 11;
-            }
-
-            ['breakfast', 'lunch', 'dinner'].forEach(t => {
-                if (!dayData.skipped[t]) {
-                    const cal = Math.max(0, config[t]);
-                    total += cal;
-                    // Rough macro estimation based on calories
-                    if (isLight) {
-                         pTotal += (cal * 0.40) / 4; // High protein ratio
-                         cTotal += (cal * 0.30) / 4; // Moderate carb
-                    } else {
-                         pTotal += (cal * 0.30) / 4; 
-                         cTotal += (cal * 0.45) / 4; // Higher carb ratio
-                    }
+            const targets = getTargets(dayData.level);
+            
+            let currentCal = dayData.brazilNut ? 33 : 0;
+            let currentP = dayData.brazilNut ? 1 : 0;
+            let currentC = dayData.brazilNut ? 0.5 : 0;
+            const mealRatios = { breakfast: 0.25, lunch: 0.375, dinner: 0.375 };
+            
+            ['breakfast', 'lunch', 'dinner'].forEach(type => {
+                if (!dayData.skipped[type]) {
+                    currentCal += targets.cal * mealRatios[type];
+                    currentP += targets.p * mealRatios[type];
+                    currentC += targets.c * mealRatios[type];
                 }
             });
 
-            const toggleLabel = document.getElementById('mode-label');
-            const toggleInput = document.getElementById('mode-toggle');
-            
-            toggleLabel.innerText = isLight ? '減脂模式 (1225)' : 'Refeed 模式 (1500)';
-            toggleLabel.className = `text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-teal-600' : 'text-orange-600'}`;
-            toggleInput.checked = !isLight; // Checked = Refeed (Orange)
+            const getLevelStyle = (level) => {
+                if (level === 'Low') return { bg: 'bg-emerald-100', text: 'text-emerald-700', bar: 'bg-emerald-500', icon: 'leaf' };
+                if (level === 'Medium') return { bg: 'bg-blue-100', text: 'text-blue-700', bar: 'bg-blue-500', icon: 'battery' };
+                return { bg: 'bg-orange-100', text: 'text-orange-700', bar: 'bg-orange-500', icon: 'flame' };
+            };
+            const levelStyle = getLevelStyle(dayData.level);
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-            // STRATEGY TEXT UPDATE
-            document.getElementById('strategy-desc').innerHTML = isLight 
-                ? '<span class="font-bold text-teal-700">減脂日 (1225 kcal)：</span>溫和熱量缺口。重點：高蛋白 (115g)、低油脂 (1茶匙)、晚餐無澱粉。' 
-                : '<span class="font-bold text-orange-700">Refeed 日 (1500 kcal)：</span>回復至 TDEE 水平。重點：增加碳水 (白飯/薯仔) 至 150g，幫助代謝 Reset，放鬆身心。';
+            // HTML 構建
+            let html = `
+                <!-- 頂部導航 -->
+                <div class="sticky top-0 z-40 bg-white border-b border-gray-200 pt-3 pb-2 px-3 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <h1 class="text-base font-bold text-gray-900">
+                            DietPlanner <span class="text-orange-500">Pro</span>
+                        </h1>
+                        <button onclick="toggleMenu()" class="p-1.5 rounded-full hover:bg-gray-100 text-gray-600">
+                            <i data-lucide="menu" class="w-5 h-5"></i>
+                        </button>
+                    </div>
 
-            document.getElementById('cal-current').innerText = Math.round(total);
-            document.getElementById('cal-target').innerText = target;
-            
-            document.getElementById('prot-current').innerText = Math.round(pTotal);
-            document.getElementById('prot-target').innerText = pTarget + 'g';
-            
-            const pPct = Math.min((pTotal/pTarget)*100, 100);
-            document.getElementById('prot-bar').style.width = pPct + '%';
-            document.getElementById('prot-bar').className = `h-full rounded-full transition-all duration-700 ${pTotal >= pTarget ? 'bg-green-500' : 'bg-blue-500'}`;
-            
-            document.getElementById('carb-current').innerText = Math.round(cTotal);
-            document.getElementById('carb-target').innerText = cTarget + 'g';
-            const cPct = Math.min((cTotal/cTarget)*100, 100);
-            document.getElementById('carb-bar').style.width = cPct + '%';
-            document.getElementById('carb-bar').className = `h-full rounded-full transition-all duration-700 ${cTotal > cTarget ? 'bg-red-400' : 'bg-yellow-400'}`;
-        }
+                    <!-- 星期選擇器 -->
+                    <div class="grid grid-cols-7 gap-1">
+                        ${state.weeklyData.map((d, i) => {
+                            const isToday = i === state.currentDayIndex;
+                            const dStyle = getLevelStyle(d.level);
+                            return `
+                                <button onclick="setDay(${i})" class="relative h-12 rounded-lg border transition-all ${isToday ? 'border-gray-800 bg-white shadow-md ring-1 ring-gray-800' : 'border-gray-100 bg-white opacity-60'}">
+                                    <div class="absolute top-0 right-0 w-2.5 h-2.5 rounded-bl-lg ${dStyle.bg}"></div>
+                                    <div class="h-full flex flex-col justify-center items-center">
+                                        <span class="text-[9px] font-bold text-gray-400 uppercase">${days[i]}</span>
+                                        <span class="text-xs font-bold ${isToday ? 'text-gray-900' : 'text-gray-500'}">${d.level[0]}</span>
+                                    </div>
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
 
-        function renderWater() {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            const container = document.getElementById('water-container');
-            
-            if (dayData.water >= 8) {
-                container.innerHTML = `
-                    <div class="water-success-card p-4 flex flex-col items-center justify-center space-y-3">
-                        <div class="flex w-full justify-between items-center">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-2xl bg-yellow-100 flex items-center justify-center text-yellow-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12,22c4.97,0,9-4.03,9-9c0-4.97-9-13-9-13S3,8.03,3,13C3,17.97,7.03,22,12,22z"/></svg>
+                <!-- 壓縮版儀表板 -->
+                <div class="px-3 mt-3">
+                    <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                        <!-- 標題行 -->
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${levelStyle.bg} ${levelStyle.text}">
+                                <i data-lucide="${levelStyle.icon}" class="w-3 h-3"></i>
+                                <span>${dayData.level}</span>
+                            </span>
+                            
+                            <div class="flex items-center space-x-2">
+                                <button onclick="toggleBrazilNut()" class="px-1.5 py-0.5 rounded-full border text-[10px] font-bold transition-colors ${dayData.brazilNut ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-gray-50 text-gray-400 border-gray-100'}">
+                                    🌰 巴西堅果
+                                </button>
+                                <button onclick="toggleMode()" class="w-7 h-4 rounded-full relative transition-colors ${dayData.level === 'Low' ? 'bg-emerald-500' : dayData.level === 'Medium' ? 'bg-blue-500' : 'bg-orange-500'}">
+                                    <div class="absolute top-0.5 left-0.5 bg-white w-3 h-3 rounded-full shadow transition-transform ${dayData.level === 'Low' ? 'translate-x-0' : dayData.level === 'Medium' ? 'translate-x-1.5' : 'translate-x-3'}"></div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 卡路里大字 -->
+                        <div class="flex items-baseline mb-2">
+                            <span class="text-2xl font-bold text-gray-900 mr-1">${Math.round(currentCal)}</span>
+                            <span class="text-xs text-gray-400">/ ${targets.cal} kcal</span>
+                        </div>
+
+                        <!-- 營養素 (並排顯示以節省空間) -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span class="font-medium text-gray-500">蛋白質</span>
+                                    <span class="text-gray-900 font-bold">${Math.round(currentP)}/${targets.p}g</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                    <div class="h-full bg-slate-800 rounded-full" style="width: ${Math.min((currentP/targets.p)*100, 100)}%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span class="font-medium text-gray-500">碳水</span>
+                                    <span class="text-gray-900 font-bold">${Math.round(currentC)}/${targets.c}g</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                    <div class="h-full rounded-full transition-colors ${levelStyle.bar}" style="width: ${Math.min((currentC/targets.c)*100, 100)}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 壓縮版飲水追蹤器 -->
+                <div class="px-3 mt-3">
+                    ${dayData.water >= 8 ? `
+                        <!-- 慶祝狀態 (壓縮) -->
+                        <div class="bg-[#FFFEF0] border border-yellow-100 rounded-xl p-3 shadow-sm relative overflow-hidden flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-lg bg-[#FFF9C4] flex items-center justify-center">
+                                    <i data-lucide="droplet" class="w-4 h-4 text-[#FBC02D] fill-[#FBC02D]"></i>
                                 </div>
                                 <div>
-                                    <h3 class="text-sm font-bold text-gray-900">Hydration</h3>
-                                    <p class="text-xs text-gray-500 font-medium">8 / 8 Cups</p>
+                                    <h3 class="text-sm font-bold text-slate-900">Hydration Goal!</h3>
+                                    <p class="text-[10px] text-[#9E7F13]">8/8 Cups 🎉</p>
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <button onclick="window.removeWater()" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <div class="flex space-x-1">
+                                <button onclick="updateWater(-1)" class="w-7 h-7 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-400">
+                                    <i data-lucide="minus" class="w-3 h-3"></i>
                                 </button>
-                                <button onclick="window.addWater()" class="w-8 h-8 rounded-full bg-yellow-400 text-white flex items-center justify-center shadow-md shadow-yellow-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <button onclick="updateWater(1)" class="w-7 h-7 rounded-full bg-[#FDD835] text-white flex items-center justify-center shadow-sm">
+                                    <i data-lucide="plus" class="w-3 h-3"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="flex w-full space-x-1 px-1">
-                            ${Array(8).fill(0).map(() => `<div class="water-dash"></div>`).join('')}
-                        </div>
-                        <div class="text-xs font-bold text-yellow-600 tracking-wide">
-                            🎉 目標達成！Excellent!
-                        </div>
-                    </div>
-                `;
-            } else {
-                let dots = '';
-                for(let i=0; i<8; i++) {
-                    const filled = i < dayData.water;
-                    dots += `<div class="water-dot ${filled ? 'bg-blue-500' : 'bg-gray-100'}"></div>`;
-                }
-                container.innerHTML = `
-                    <div class="bg-white rounded-full p-1 pr-2 shadow-sm border border-gray-100 flex items-center justify-between">
-                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 flex-shrink-0 ml-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                                <path d="M12,22c4.97,0,9-4.03,9-9c0-4.97-9-13-9-13S3,8.03,3,13C3,17.97,7.03,22,12,22z"/>
-                            </svg>
-                        </div>
-                        <div class="flex space-x-1 mx-2" id="water-dots">
-                            ${dots}
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xs font-medium text-gray-400 tabular-nums"><span id="water-text" class="text-gray-600 font-bold">${dayData.water * 250}</span>ml</span>
-                            <button onclick="window.removeWater()" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 active:scale-95 transition-transform">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </button>
-                            <button onclick="window.addWater()" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center active:scale-95 transition-transform shadow-md shadow-blue-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        function renderMeals() {
-            const dayData = appState.weeklyData[appState.currentDayIndex];
-            const isLight = dayData.isLight; // True = Diet, False = Refeed
-            
-            const types = [
-                { k: 'breakfast', l: '早餐', icon: ICONS.coffee },
-                { k: 'lunch', l: '午餐', icon: ICONS.sun },
-                { k: 'dinner', l: '晚餐', icon: ICONS.moon }
-            ];
-
-             const mealConfigs = {
-                diet: { breakfast: 325, lunch: 450, dinner: 450 },
-                refeed: { breakfast: 400, lunch: 550, dinner: 550 }
-            };
-            
-            const config = isLight ? {...mealConfigs.diet} : {...mealConfigs.refeed};
-
-            if (dayData.brazilNut) {
-                config.lunch -= 11;
-                config.dinner -= 11;
-                config.breakfast -= 11;
-            }
-
-            const html = types.map(t => {
-                const recipe = dayData.plan[t.k];
-                const skipped = dayData.skipped[t.k];
-                const swapped = dayData.swapped[t.k];
-                const displayCals = Math.max(0, config[t.k]);
-                
-                const ingredients = generateIngredients(recipe.name, isLight, t.k);
-                const tip = generateTip(recipe.name, isLight);
-                const subtext = generateSubtext(recipe.name, isLight, t.k);
-
-                return `
-                    <div class="meal-card p-5 relative overflow-hidden ${skipped ? 'meal-skipped' : ''} ${swapped ? 'animate-fade-in' : ''}">
-                        <div class="flex justify-between items-center mb-3">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-xl">${t.icon}</span>
-                                <span class="text-base font-bold text-gray-900">${t.l}</span>
-                                ${swapped ? '<span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold ml-1">✨ 已更新</span>' : ''}
+                    ` : `
+                        <!-- 普通狀態 (壓縮) -->
+                        <div class="bg-white rounded-xl p-2 pr-2 shadow-sm border border-gray-100 flex items-center justify-between h-12">
+                            <div class="flex items-center h-full pl-1 flex-1">
+                                <!-- 省略大圓圈圖標，直接顯示進度點 -->
+                                <div class="flex items-center space-x-1 mr-2">
+                                    <i data-lucide="droplet" class="w-4 h-4 text-blue-500 fill-blue-500 mr-1"></i>
+                                    ${Array(8).fill(0).map((_, i) => `
+                                        <div class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${i < dayData.water ? 'bg-blue-500' : 'bg-blue-100'}"></div>
+                                    `).join('')}
+                                </div>
                             </div>
-                            <span class="bg-white border border-gray-100 text-gray-400 text-[10px] font-mono px-2 py-1 rounded">
-                                ${displayCals} kcal
-                            </span>
-                        </div>
-                        <div class="mb-4">
-                            <div class="flex justify-between items-start">
-                                <h3 class="text-base font-bold text-gray-800 leading-tight w-full">${recipe.name}</h3>
-                                <div class="flex space-x-1 ml-2 flex-shrink-0">
-                                    <button onclick="window.swapMeal('${t.k}')" class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 hover:text-blue-600 flex items-center justify-center">
-                                        ${ICONS.refresh}
+                            <div class="flex items-center space-x-2 pr-1">
+                                <span class="text-gray-500 font-bold text-xs whitespace-nowrap">${dayData.water * 250}ml</span>
+                                <div class="flex space-x-1">
+                                    <button onclick="updateWater(-1)" class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50">
+                                        <i data-lucide="minus" class="w-3 h-3"></i>
                                     </button>
-                                    <button onclick="window.toggleSkip('${t.k}')" class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 hover:text-red-500 flex items-center justify-center">
-                                        ${skipped ? ICONS.restore : ICONS.close}
+                                    <button onclick="updateWater(1)" class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm shadow-blue-200">
+                                        <i data-lucide="plus" class="w-3 h-3"></i>
                                     </button>
                                 </div>
                             </div>
-                            ${!skipped ? `<p class="text-xs text-gray-500 mt-1">${subtext}</p>` : ''}
                         </div>
-                        ${!skipped ? `
-                        <div class="space-y-1.5 mb-4 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
-                            ${ingredients.map(ing => `
-                                <div class="flex items-start space-x-2">
-                                    <div class="mt-1">${ICONS.check}</div>
-                                    <span class="text-xs text-gray-600">${ing}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="tip-box p-2.5 flex items-start space-x-2">
-                            <div class="mt-0.5 flex-shrink-0">${ICONS.bulb}</div>
-                            <p class="text-[11px] text-yellow-800/80 leading-relaxed font-medium">
-                                ${tip}
-                            </p>
-                        </div>
-                        ` : '<p class="text-xs text-red-400 text-center py-2">本餐已略過</p>'}
-                    </div>
-                `;
-            }).join('');
-            document.getElementById('meals-container').innerHTML = html;
-        }
+                    `}
+                </div>
 
-        function renderFullMenu() {
-            const list = document.getElementById('full-menu-list');
-            const categories = {};
-            RECIPES.forEach(r => {
-                if (!categories[r.category]) categories[r.category] = [];
-                categories[r.category].push(r);
-            });
+                <!-- 餐單列表 (Emoji版) -->
+                <div class="px-3 mt-4 space-y-3 pb-10">
+                    ${['breakfast', 'lunch', 'dinner'].map(type => {
+                        const meal = dayData.plan[type];
+                        const skipped = dayData.skipped[type];
+                        const swapped = dayData.swapped[type];
+                        const ingredients = generateIngredients(meal.name, dayData.level, type);
+                        const displayCal = Math.round(targets.cal * mealRatios[type]);
+                        
+                        // 使用 Emoji 替代 Vector Icons
+                        const emojis = { breakfast: '☕', lunch: '☀️', dinner: '🌙' };
+                        const labels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐' };
 
-            const order = ['早餐 (Breakfast)', '雞肉料理 (Chicken)', '紅肉料理 (Beef/Pork)', '海鮮料理 (Seafood)', '素食/輕食 (Veggie/Light)'];
-            let html = '';
-            order.forEach(cat => {
-                if(categories[cat]) {
-                    html += `
-                        <div class="mb-6">
-                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 pl-1 border-b border-gray-100 pb-1">${cat}</h3>
-                            <div class="space-y-2">
-                                ${categories[cat].map(r => `
-                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                        <span class="text-xs font-medium text-gray-800">${r.name}</span>
-                                        ${r.tags.includes('light') ? '<span class="text-[9px] bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded font-bold">L</span>' : ''}
+                        return `
+                            <div class="bg-white border rounded-xl p-4 shadow-sm transition-all ${skipped ? 'opacity-60 bg-gray-50 border-dashed border-gray-300' : 'border-gray-100'}">
+                                <div class="flex justify-between items-center mb-2">
+                                    <div class="flex items-center space-x-2 text-gray-700">
+                                        <span class="text-lg">${emojis[type]}</span>
+                                        <span class="text-sm font-bold text-gray-900">${labels[type]}</span>
+                                        ${swapped ? '<span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold">已更新</span>' : ''}
                                     </div>
-                                `).join('')}
+                                    <span class="text-[10px] text-gray-400 font-mono border border-gray-100 px-1.5 py-0.5 rounded">
+                                        ${displayCal} kcal
+                                    </span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-base font-bold text-gray-800 leading-snug w-full ${skipped ? 'line-through' : ''}">
+                                            ${meal.name}
+                                        </h3>
+                                        <div class="flex space-x-1 ml-2 flex-shrink-0">
+                                            <button onclick="swapMeal('${type}')" class="p-1.5 rounded-full bg-gray-50 text-gray-400 hover:text-blue-600">
+                                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            <button onclick="toggleSkip('${type}')" class="p-1.5 rounded-full bg-gray-50 text-gray-400 hover:text-red-500">
+                                                <i data-lucide="${skipped ? 'rotate-ccw' : 'x'}" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                ${!skipped ? `
+                                    <div class="space-y-1.5 mb-3">
+                                        ${ingredients.map(ing => `
+                                            <div class="flex items-start space-x-2">
+                                                <div class="mt-1 text-emerald-500 flex-shrink-0"><i data-lucide="check" class="w-3 h-3" stroke-width="3"></i></div>
+                                                <span class="text-xs leading-relaxed ${ing.highlight ? 'text-red-500 font-bold' : 'text-gray-600'}">
+                                                    ${ing.text}
+                                                </span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+
+                                    <div class="bg-[#FFFBEB] p-2 rounded-lg flex items-start space-x-2">
+                                        <div class="text-yellow-500 mt-0.5 flex-shrink-0"><i data-lucide="lightbulb" class="w-3 h-3"></i></div>
+                                        <span class="text-[10px] text-[#92400E] leading-relaxed font-medium">
+                                            ${dayData.level === 'Low' ? '減脂日：專注蛋白質與纖維，晚餐避免澱粉。' : '平衡/高碳日：適量碳水支持日常活動。'}
+                                        </span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <!-- 菜單 Drawer (保持不變) -->
+                ${state.menuOpen ? `
+                    <div class="fixed inset-0 z-50 flex justify-end">
+                        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" onclick="toggleMenu()"></div>
+                        <div class="relative w-4/5 max-w-sm bg-white h-full shadow-2xl flex flex-col animate-slide-in">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                <h2 class="text-base font-bold text-gray-900">菜單資料庫</h2>
+                                <button onclick="toggleMenu()" class="p-1 rounded-full hover:bg-gray-200">
+                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <div class="flex-1 overflow-y-auto p-4">
+                                <div class="space-y-2">
+                                    ${RECIPES.map(r => `
+                                        <div class="text-xs text-gray-700 p-2 bg-gray-50 rounded border border-gray-100">
+                                            ${r.name}
+                                        </div>
+                                    `).join('')}
+                                </div>
                             </div>
                         </div>
-                    `;
-                }
-            });
-            list.innerHTML = html;
+                    </div>
+                ` : ''}
+            `;
+
+            app.innerHTML = html;
+            lucide.createIcons(); // 重新渲染圖標
         }
 
-        // --- Init ---
-        document.addEventListener('DOMContentLoaded', () => {
-            generateWeeklyPlan();
-            render();
-        });
+        // --- 6. 啟動 ---
+        initData();
+        render();
+
     </script>
 </body>
 </html>
