@@ -4,14 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DietPlanner Pro</title>
+    
+    <!-- 設定 iPhone 主畫面 Icon -->
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/kerryraquel/DietPlanner-Pro/9e23209bb060a3b519946300ee5fda95a419564c/IMG_2979.png">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/kerryraquel/DietPlanner-Pro/9e23209bb060a3b519946300ee5fda95a419564c/IMG_2979.png">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons (仍用於 UI 控件如菜單、加減號) -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        /* 隱藏 Scrollbar 但保留功能 */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         /* 動畫 */
@@ -29,7 +35,7 @@
     </div>
 
     <script>
-        // --- 1. 數據庫 (保持不變) ---
+        // --- 1. 數據庫與分類邏輯 ---
         const RAW_RECIPES = [
             "蘋果肉桂烤燕麥", "蝦仁牛肉拌麵", "檸檬乾煎雞", "椰菜絲燘肉絲", "薯絲娃娃菜牛肉片蒸蛋", "法式橙香紙包魚", "翠玉瓜絲蝦仁餅",
             "Cajun香料雞髀飯", "蝦仁芋絲青瓜雞蛋沙律", "Spicy Salmon poke bowl", "Miso Mushroom Coconut Milk Udon", "Caesar Salad with chicken",
@@ -54,46 +60,154 @@
             "清蒸豆腐娃娃菜肉餅", "法式巴斯克炖雞配蒟蒻米 (Poulet Basquaise)"
         ];
 
-        // --- 2. 邏輯處理 (保持不變) ---
-        const getRecipeType = (name) => {
+        // 輔助函數：根據菜名推斷分類與營養素
+        const analyzeRecipe = (name) => {
             const n = name.toLowerCase();
-            if (n.includes('oats') || n.includes('燕麥') || n.includes('toast') || n.includes('sandwich') || n.includes('frittata') || n.includes('breakfast')) {
-                return 'breakfast';
+            let category = 'other';
+            let macros = { p: 0, c: 0, f: 0, cal: 0 };
+
+            // 1. 分類
+            if (n.includes('oats') || n.includes('燕麥') || n.includes('toast') || n.includes('sandwich') || n.includes('frittata') || n.includes('breakfast') || n.includes('多士')) {
+                category = 'breakfast';
+            } else if (n.includes('雞') || n.includes('chicken') || n.includes('poulet')) {
+                category = 'chicken';
+            } else if (n.includes('牛') || n.includes('beef') || n.includes('steak')) {
+                category = 'beef';
+            } else if (n.includes('蝦') || n.includes('魚') || n.includes('salmon') || n.includes('fish') || n.includes('shrimp') || n.includes('seafood') || n.includes('tuna') || n.includes('鯖魚') || n.includes('鱸魚')) {
+                category = 'seafood';
+            } else if (n.includes('豬') || n.includes('pork') || n.includes('肉絲') || n.includes('肉餅')) {
+                category = 'pork';
+            } else {
+                category = 'vegetarian';
             }
-            return 'lunch_dinner';
+
+            // 2. 營養素估算
+            if (category === 'breakfast') {
+                macros = { p: 22, c: 45, f: 10 }; 
+            } else if (category === 'chicken') {
+                macros = { p: 38, c: 35, f: 10 }; 
+            } else if (category === 'beef') {
+                macros = { p: 35, c: 30, f: 16 }; 
+            } else if (category === 'seafood') {
+                macros = { p: 36, c: 35, f: 12 }; 
+            } else if (category === 'pork') {
+                macros = { p: 32, c: 30, f: 18 }; 
+            } else { 
+                macros = { p: 20, c: 45, f: 14 }; 
+            }
+
+            // 微調
+            if (n.includes('飯') || n.includes('麵') || n.includes('意粉') || n.includes('pasta') || n.includes('udon')) {
+                macros.c += 15;
+            } else if (n.includes('沙律') || n.includes('salad') || n.includes('湯') || n.includes('soup')) {
+                macros.c -= 10;
+            }
+
+            macros.cal = (macros.p * 4) + (macros.c * 4) + (macros.f * 9);
+
+            return { category, macros };
         };
 
-        const RECIPES = RAW_RECIPES.map((name, index) => ({
-            id: index,
-            name,
-            type: getRecipeType(name)
-        }));
+        const RECIPES = RAW_RECIPES.map((name, index) => {
+            const analysis = analyzeRecipe(name);
+            return {
+                id: index,
+                name,
+                type: analysis.category === 'breakfast' ? 'breakfast' : 'lunch_dinner',
+                category: analysis.category,
+                macros: analysis.macros
+            };
+        });
 
         const generateIngredients = (name, level, type) => {
             let ings = [];
             const n = name.toLowerCase();
             
-            if (n.includes('蘋果肉桂烤燕麥')) return [{ text: '蘋果 1個', highlight: false }, { text: '全粒燕麥 (30g)', highlight: false }, { text: '牛奶/植物奶 (120g)', highlight: false }];
-            if (n.includes('蝦仁牛肉拌麵')) return [{ text: '蝦仁 & 牛肉片', highlight: false }, { text: level === 'Low' ? '千張/豆腐皮' : '烏冬/蕎麥麵', highlight: level === 'Low' }, { text: '青瓜絲 & 紅蘿蔔絲', highlight: false }];
-
-            const meatWeight = level === 'Low' ? '120g (瘦肉)' : '150g'; 
+            if (n.includes('蘋果肉桂烤燕麥')) return [{ text: '蘋果 1個', highlight: false }, { text: '全粒燕麥 (40g)', highlight: false }, { text: '牛奶/植物奶 (150ml)', highlight: false }];
+            
+            const meatWeight = '120-150g'; 
             if (n.includes('雞')) ings.push({ text: `雞肉: ${meatWeight}`, highlight: false });
             else if (n.includes('牛')) ings.push({ text: `牛肉: ${meatWeight}`, highlight: false });
             else if (n.includes('蝦')) ings.push({ text: '蝦仁 (15-20隻)', highlight: false });
+            else if (n.includes('魚') || n.includes('salmon')) ings.push({ text: '魚柳 (140g)', highlight: false });
+            else if (n.includes('蛋')) ings.push({ text: '雞蛋 (2隻)', highlight: false });
             else ings.push({ text: '優質蛋白質 (140g)', highlight: false });
 
             ings.push({ text: '時令蔬菜 (250g+)', highlight: false });
 
             if (type === 'breakfast') {
-                ings.push({ text: level === 'Low' ? '全麥麵包(1片)' : '燕麥/蕃薯', highlight: false });
+                ings.push({ text: '燕麥/全麥麵包/蕃薯', highlight: false });
             } else {
-                if (type === 'dinner' && level === 'Low') ings.push({ text: '晚餐無澱粉 (只食菜肉)', highlight: true });
-                else ings.push({ text: level === 'Medium' ? '半拳澱粉' : '1碗飯/麵', highlight: false });
+                if (level === 'Low') ings.push({ text: '澱粉減半 (半碗飯/拳頭大蕃薯)', highlight: true });
+                else ings.push({ text: '1碗飯 / 1個大薯仔 / 1份麵', highlight: false });
             }
             return ings;
         };
 
-        // --- 3. 狀態管理 (保持不變) ---
+        // --- 2. 智能貼士系統 ---
+        const SMART_TIPS = {
+            breakfast: [
+                "早餐攝取足夠蛋白質（如雞蛋、希臘乳酪）能有效減少下午的零食慾望。",
+                "燕麥含有β-葡聚醣，能提供穩定的能量釋放，避免血糖大起大落。",
+                "如果早上趕時間，前一晚準備 Overnight Oats 是最方便的選擇。",
+                "早餐搭配一杯黑咖啡或綠茶，有助於提升早晨的新陳代謝。",
+                "早晨是補充水分的最佳時機，餐前先飲一杯水喚醒腸胃。"
+            ],
+            seafood: [
+                "魚類含有豐富的 Omega-3 脂肪酸，有助抗炎及心腦血管健康。",
+                "蝦仁是極低脂的高蛋白來源，非常適合減脂期食用。",
+                "三文魚雖然脂肪稍高，但都是優質脂肪，不用刻意避開。",
+                "貝類海鮮通常富含鋅，對免疫系統和代謝修復很有幫助。"
+            ],
+            meat: [
+                "牛肉含有豐富的鐵質和肌酸，適合在有運動的日子食用。",
+                "雞胸肉如果不喜歡太乾，可以嘗試用鹽水浸泡一晚再煮。",
+                "豬肉選擇瘦肉部位（如梅頭瘦肉），蛋白質含量其實不輸牛肉。",
+                "紅肉攝取量適中即可，搭配大量深色蔬菜可以平衡酸鹼值。"
+            ],
+            low_carb: [
+                "低碳日記得多吃綠葉蔬菜，增加膳食纖維以維持飽腹感。",
+                "減少澱粉時，可以稍微增加一點優質脂肪（如牛油果、堅果）來維持能量。",
+                "晚餐避免精緻澱粉，有助於夜間生長激素分泌，促進燃脂。",
+                "如果覺得餓，可以喝一碗熱湯或花草茶，有助緩解空腹感。"
+            ],
+            general: [
+                "進食順序建議：先飲湯/水，再食菜，接著肉，最後才食飯。",
+                "每一口咀嚼 20 下，大腦需要 20 分鐘才能接收到飽足信號。",
+                "感覺餓的時候可能只是渴了，試著先喝杯水觀察 10 分鐘。",
+                "保持血糖平穩的關鍵是：碳水化合物永遠不要單獨吃，要配蛋白質和纖維。"
+            ]
+        };
+
+        function getSmartTip(mealType, dayLevel, category, recipeName) {
+            let pool = [];
+            
+            // 1. 根據餐點類型
+            if (mealType === 'breakfast') {
+                pool = pool.concat(SMART_TIPS.breakfast);
+            }
+            
+            // 2. 根據食材類別
+            if (category === 'seafood') pool = pool.concat(SMART_TIPS.seafood);
+            if (category === 'beef' || category === 'chicken' || category === 'pork') pool = pool.concat(SMART_TIPS.meat);
+
+            // 3. 根據 Level
+            if (dayLevel === 'Low' && mealType !== 'breakfast') {
+                pool = pool.concat(SMART_TIPS.low_carb);
+            }
+
+            // 4. 加入通用貼士
+            pool = pool.concat(SMART_TIPS.general);
+
+            // 為了讓同一餐在同一天顯示相同的貼士（避免閃爍），使用簡單的哈希算法
+            const seed = recipeName.length + state.currentDayIndex + (mealType === 'lunch' ? 5 : 0) + (mealType === 'dinner' ? 10 : 0);
+            return pool[seed % pool.length];
+        }
+
+        // --- 3. 狀態管理 ---
+        const USER_TARGETS = { p: 94, c: 125, f: 42 };
+        const TARGET_CALORIES = (USER_TARGETS.p * 4) + (USER_TARGETS.c * 4) + (USER_TARGETS.f * 9);
+
         const state = {
             currentDayIndex: new Date().getDay(),
             menuOpen: false,
@@ -123,73 +237,77 @@
             }
         }
 
-        // --- 4. 操作函數 (保持不變) ---
-        function updateState() { render(); }
-        function setDay(index) { state.currentDayIndex = index; updateState(); }
-        function toggleMenu() { state.menuOpen = !state.menuOpen; updateState(); }
-        function toggleMode() {
+        // --- 4. 操作函數 ---
+        window.setDay = (index) => { state.currentDayIndex = index; render(); };
+        window.toggleMenu = () => { state.menuOpen = !state.menuOpen; render(); };
+        window.toggleMode = () => {
             const levels = ['Low', 'Medium', 'High'];
             const day = state.weeklyData[state.currentDayIndex];
             const currentIdx = levels.indexOf(day.level);
             day.level = levels[(currentIdx + 1) % 3];
-            updateState();
-        }
-        function toggleBrazilNut() {
+            render();
+        };
+        window.toggleBrazilNut = () => {
             const day = state.weeklyData[state.currentDayIndex];
             day.brazilNut = !day.brazilNut;
-            updateState();
-        }
-        function updateWater(delta) {
+            render();
+        };
+        window.updateWater = (delta) => {
             const day = state.weeklyData[state.currentDayIndex];
             let newAmount = day.water + delta;
             if (newAmount < 0) newAmount = 0;
             if (newAmount > 8) newAmount = 8;
             day.water = newAmount;
-            updateState();
-        }
-        function toggleSkip(mealType) {
+            render();
+        };
+        window.toggleSkip = (mealType) => {
             const day = state.weeklyData[state.currentDayIndex];
             day.skipped[mealType] = !day.skipped[mealType];
-            updateState();
-        }
-        function swapMeal(mealType) {
+            render();
+        };
+        window.swapMeal = (mealType) => {
             const day = state.weeklyData[state.currentDayIndex];
+            const currentMeal = day.plan[mealType];
+            
             const pool = mealType === 'breakfast' 
                 ? RECIPES.filter(r => r.type === 'breakfast') 
                 : RECIPES.filter(r => r.type === 'lunch_dinner');
-            const newMeal = pool[Math.floor(Math.random() * pool.length)];
+            
+            let newMeal = pool[Math.floor(Math.random() * pool.length)];
+            let attempts = 0;
+            while (newMeal.id === currentMeal.id && attempts < 10) {
+                newMeal = pool[Math.floor(Math.random() * pool.length)];
+                attempts++;
+            }
+
             day.plan[mealType] = newMeal;
             day.swapped[mealType] = true;
             day.skipped[mealType] = false;
-            updateState();
-        }
+            render();
+        };
 
-        // --- 5. 渲染函數 (已修改：縮小卡片，更換 Emoji) ---
+        // --- 5. 渲染函數 ---
         function render() {
             const app = document.getElementById('app');
             const dayData = state.weeklyData[state.currentDayIndex];
             
-            // 計算數值
-            const getTargets = (level) => {
-                if (level === 'Low') return { cal: 1200, p: 120, c: 80 };
-                if (level === 'Medium') return { cal: 1375, p: 120, c: 120 };
-                return { cal: 1525, p: 120, c: 160 };
-            };
-            const targets = getTargets(dayData.level);
-            
-            let currentCal = dayData.brazilNut ? 33 : 0;
-            let currentP = dayData.brazilNut ? 1 : 0;
-            let currentC = dayData.brazilNut ? 0.5 : 0;
-            const mealRatios = { breakfast: 0.25, lunch: 0.375, dinner: 0.375 };
-            
+            // 計算營養
+            let currentCal = 0, currentP = 0, currentC = 0, currentF = 0;
+            if (dayData.brazilNut) { currentCal += 33; currentP += 1; currentC += 0.5; currentF += 3.5; }
+
             ['breakfast', 'lunch', 'dinner'].forEach(type => {
                 if (!dayData.skipped[type]) {
-                    currentCal += targets.cal * mealRatios[type];
-                    currentP += targets.p * mealRatios[type];
-                    currentC += targets.c * mealRatios[type];
+                    const meal = dayData.plan[type];
+                    let mealC = meal.macros.c;
+                    if (dayData.level === 'Low' && type !== 'breakfast') mealC = mealC * 0.7;
+                    currentP += meal.macros.p;
+                    currentC += mealC;
+                    currentF += meal.macros.f;
+                    currentCal += (meal.macros.p * 4) + (mealC * 4) + (meal.macros.f * 9);
                 }
             });
 
+            // 樣式變數
             const getLevelStyle = (level) => {
                 if (level === 'Low') return { bg: 'bg-emerald-100', text: 'text-emerald-700', bar: 'bg-emerald-500', icon: 'leaf' };
                 if (level === 'Medium') return { bg: 'bg-blue-100', text: 'text-blue-700', bar: 'bg-blue-500', icon: 'battery' };
@@ -198,233 +316,196 @@
             const levelStyle = getLevelStyle(dayData.level);
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-            // HTML 構建
-            let html = `
-                <!-- 頂部導航 -->
+            // 構建 HTML
+            let html = '';
+
+            // 1. Header
+            html += `
                 <div class="sticky top-0 z-40 bg-white border-b border-gray-200 pt-3 pb-2 px-3 shadow-sm">
                     <div class="flex justify-between items-center mb-2">
-                        <h1 class="text-base font-bold text-gray-900">
-                            DietPlanner <span class="text-orange-500">Pro</span>
-                        </h1>
-                        <button onclick="toggleMenu()" class="p-1.5 rounded-full hover:bg-gray-100 text-gray-600">
-                            <i data-lucide="menu" class="w-5 h-5"></i>
-                        </button>
+                        <h1 class="text-base font-bold text-gray-900">DietPlanner <span class="text-orange-500">Pro</span></h1>
+                        <button onclick="toggleMenu()" class="p-1.5 rounded-full hover:bg-gray-100 text-gray-600"><i data-lucide="menu" class="w-5 h-5"></i></button>
                     </div>
-
-                    <!-- 星期選擇器 -->
                     <div class="grid grid-cols-7 gap-1">
                         ${state.weeklyData.map((d, i) => {
                             const isToday = i === state.currentDayIndex;
                             const dStyle = getLevelStyle(d.level);
-                            return `
-                                <button onclick="setDay(${i})" class="relative h-12 rounded-lg border transition-all ${isToday ? 'border-gray-800 bg-white shadow-md ring-1 ring-gray-800' : 'border-gray-100 bg-white opacity-60'}">
-                                    <div class="absolute top-0 right-0 w-2.5 h-2.5 rounded-bl-lg ${dStyle.bg}"></div>
-                                    <div class="h-full flex flex-col justify-center items-center">
-                                        <span class="text-[9px] font-bold text-gray-400 uppercase">${days[i]}</span>
-                                        <span class="text-xs font-bold ${isToday ? 'text-gray-900' : 'text-gray-500'}">${d.level[0]}</span>
-                                    </div>
-                                </button>
-                            `;
+                            return `<button onclick="setDay(${i})" class="relative h-12 rounded-lg border transition-all ${isToday ? 'border-gray-800 bg-white shadow-md ring-1 ring-gray-800' : 'border-gray-100 bg-white opacity-60'}">
+                                <div class="absolute top-0 right-0 w-2.5 h-2.5 rounded-bl-lg ${dStyle.bg}"></div>
+                                <div class="h-full flex flex-col justify-center items-center">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase">${days[i]}</span>
+                                    <span class="text-xs font-bold ${isToday ? 'text-gray-900' : 'text-gray-500'}">${d.level[0]}</span>
+                                </div>
+                            </button>`;
                         }).join('')}
                     </div>
                 </div>
+            `;
 
-                <!-- 壓縮版儀表板 -->
+            // 2. Dashboard
+            html += `
                 <div class="px-3 mt-3">
                     <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-                        <!-- 標題行 -->
                         <div class="flex justify-between items-center mb-2">
                             <span class="flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${levelStyle.bg} ${levelStyle.text}">
-                                <i data-lucide="${levelStyle.icon}" class="w-3 h-3"></i>
-                                <span>${dayData.level}</span>
+                                <i data-lucide="${levelStyle.icon}" class="w-3 h-3"></i><span>${dayData.level}</span>
                             </span>
-                            
                             <div class="flex items-center space-x-2">
-                                <button onclick="toggleBrazilNut()" class="px-1.5 py-0.5 rounded-full border text-[10px] font-bold transition-colors ${dayData.brazilNut ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-gray-50 text-gray-400 border-gray-100'}">
-                                    🌰 巴西堅果
-                                </button>
+                                <button onclick="toggleBrazilNut()" class="px-1.5 py-0.5 rounded-full border text-[10px] font-bold transition-colors ${dayData.brazilNut ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-gray-50 text-gray-400 border-gray-100'}">🌰 巴西堅果</button>
                                 <button onclick="toggleMode()" class="w-7 h-4 rounded-full relative transition-colors ${dayData.level === 'Low' ? 'bg-emerald-500' : dayData.level === 'Medium' ? 'bg-blue-500' : 'bg-orange-500'}">
                                     <div class="absolute top-0.5 left-0.5 bg-white w-3 h-3 rounded-full shadow transition-transform ${dayData.level === 'Low' ? 'translate-x-0' : dayData.level === 'Medium' ? 'translate-x-1.5' : 'translate-x-3'}"></div>
                                 </button>
                             </div>
                         </div>
-
-                        <!-- 卡路里大字 -->
-                        <div class="flex items-baseline mb-2">
+                        <div class="flex items-baseline mb-3">
                             <span class="text-2xl font-bold text-gray-900 mr-1">${Math.round(currentCal)}</span>
-                            <span class="text-xs text-gray-400">/ ${targets.cal} kcal</span>
+                            <span class="text-xs text-gray-400">/ ${Math.round(TARGET_CALORIES)} kcal</span>
                         </div>
-
-                        <!-- 營養素 (並排顯示以節省空間) -->
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <div class="flex justify-between text-[10px] mb-1">
-                                    <span class="font-medium text-gray-500">蛋白質</span>
-                                    <span class="text-gray-900 font-bold">${Math.round(currentP)}/${targets.p}g</span>
-                                </div>
-                                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                    <div class="h-full bg-slate-800 rounded-full" style="width: ${Math.min((currentP/targets.p)*100, 100)}%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-[10px] mb-1">
-                                    <span class="font-medium text-gray-500">碳水</span>
-                                    <span class="text-gray-900 font-bold">${Math.round(currentC)}/${targets.c}g</span>
-                                </div>
-                                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                    <div class="h-full rounded-full transition-colors ${levelStyle.bar}" style="width: ${Math.min((currentC/targets.c)*100, 100)}%"></div>
-                                </div>
-                            </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div><div class="flex justify-between text-[10px] mb-1"><span class="font-medium text-gray-500">Prot</span><span class="text-gray-900 font-bold">${Math.round(currentP)}/${USER_TARGETS.p}</span></div><div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-slate-800 rounded-full" style="width: ${Math.min((currentP/USER_TARGETS.p)*100, 100)}%"></div></div></div>
+                            <div><div class="flex justify-between text-[10px] mb-1"><span class="font-medium text-gray-500">Carb</span><span class="text-gray-900 font-bold">${Math.round(currentC)}/${USER_TARGETS.c}</span></div><div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"><div class="h-full rounded-full transition-colors ${levelStyle.bar}" style="width: ${Math.min((currentC/USER_TARGETS.c)*100, 100)}%"></div></div></div>
+                            <div><div class="flex justify-between text-[10px] mb-1"><span class="font-medium text-gray-500">Fat</span><span class="text-gray-900 font-bold">${Math.round(currentF)}/${USER_TARGETS.f}</span></div><div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-yellow-500 rounded-full" style="width: ${Math.min((currentF/USER_TARGETS.f)*100, 100)}%"></div></div></div>
                         </div>
                     </div>
                 </div>
+            `;
 
-                <!-- 壓縮版飲水追蹤器 -->
-                <div class="px-3 mt-3">
-                    ${dayData.water >= 8 ? `
-                        <!-- 慶祝狀態 (壓縮) -->
-                        <div class="bg-[#FFFEF0] border border-yellow-100 rounded-xl p-3 shadow-sm relative overflow-hidden flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-8 h-8 rounded-lg bg-[#FFF9C4] flex items-center justify-center">
-                                    <i data-lucide="droplet" class="w-4 h-4 text-[#FBC02D] fill-[#FBC02D]"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-slate-900">Hydration Goal!</h3>
-                                    <p class="text-[10px] text-[#9E7F13]">8/8 Cups 🎉</p>
-                                </div>
+            // 3. Water Tracker
+            html += `<div class="px-3 mt-3">`;
+            if (dayData.water >= 8) {
+                html += `
+                    <div class="bg-[#FFFEF0] border border-yellow-100 rounded-xl p-3 shadow-sm relative overflow-hidden flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 rounded-lg bg-[#FFF9C4] flex items-center justify-center"><i data-lucide="droplet" class="w-4 h-4 text-[#FBC02D] fill-[#FBC02D]"></i></div>
+                            <div><h3 class="text-sm font-bold text-slate-900">Hydration Goal!</h3><p class="text-[10px] text-[#9E7F13]">8/8 Cups 🎉</p></div>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button onclick="updateWater(-1)" class="w-7 h-7 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-400"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                            <button onclick="updateWater(1)" class="w-7 h-7 rounded-full bg-[#FDD835] text-white flex items-center justify-center shadow-sm"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="bg-white rounded-xl p-2 pr-2 shadow-sm border border-gray-100 flex items-center justify-between h-12">
+                        <div class="flex items-center h-full pl-1 flex-1">
+                            <div class="flex items-center space-x-1 mr-2">
+                                <i data-lucide="droplet" class="w-4 h-4 text-blue-500 fill-blue-500 mr-1"></i>
+                                ${Array(8).fill(0).map((_, i) => `<div class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${i < dayData.water ? 'bg-blue-500' : 'bg-blue-100'}"></div>`).join('')}
                             </div>
+                        </div>
+                        <div class="flex items-center space-x-2 pr-1">
+                            <span class="text-gray-500 font-bold text-xs whitespace-nowrap">${dayData.water * 250}ml</span>
                             <div class="flex space-x-1">
-                                <button onclick="updateWater(-1)" class="w-7 h-7 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-400">
-                                    <i data-lucide="minus" class="w-3 h-3"></i>
-                                </button>
-                                <button onclick="updateWater(1)" class="w-7 h-7 rounded-full bg-[#FDD835] text-white flex items-center justify-center shadow-sm">
-                                    <i data-lucide="plus" class="w-3 h-3"></i>
-                                </button>
+                                <button onclick="updateWater(-1)" class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                <button onclick="updateWater(1)" class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm shadow-blue-200"><i data-lucide="plus" class="w-3 h-3"></i></button>
                             </div>
                         </div>
-                    ` : `
-                        <!-- 普通狀態 (壓縮) -->
-                        <div class="bg-white rounded-xl p-2 pr-2 shadow-sm border border-gray-100 flex items-center justify-between h-12">
-                            <div class="flex items-center h-full pl-1 flex-1">
-                                <!-- 省略大圓圈圖標，直接顯示進度點 -->
-                                <div class="flex items-center space-x-1 mr-2">
-                                    <i data-lucide="droplet" class="w-4 h-4 text-blue-500 fill-blue-500 mr-1"></i>
-                                    ${Array(8).fill(0).map((_, i) => `
-                                        <div class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${i < dayData.water ? 'bg-blue-500' : 'bg-blue-100'}"></div>
-                                    `).join('')}
-                                </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+
+            // 4. Meals
+            html += `<div class="px-3 mt-4 space-y-3 pb-10">`;
+            ['breakfast', 'lunch', 'dinner'].forEach(type => {
+                const meal = dayData.plan[type];
+                const skipped = dayData.skipped[type];
+                const swapped = dayData.swapped[type];
+                const ingredients = generateIngredients(meal.name, dayData.level, type);
+                const smartTip = getSmartTip(type, dayData.level, meal.category, meal.name);
+                
+                let mealC = meal.macros.c;
+                if (dayData.level === 'Low' && type !== 'breakfast') mealC = mealC * 0.7;
+                const displayCal = Math.round((meal.macros.p * 4) + (mealC * 4) + (meal.macros.f * 9));
+                
+                const emojis = { breakfast: '☕', lunch: '☀️', dinner: '🌙' };
+                const labels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐' };
+
+                html += `
+                    <div class="bg-white border rounded-xl p-4 shadow-sm transition-all ${skipped ? 'opacity-60 bg-gray-50 border-dashed border-gray-300' : 'border-gray-100'}">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center space-x-2 text-gray-700">
+                                <span class="text-lg">${emojis[type]}</span>
+                                <span class="text-sm font-bold text-gray-900">${labels[type]}</span>
+                                ${swapped ? '<span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold">已更新</span>' : ''}
                             </div>
-                            <div class="flex items-center space-x-2 pr-1">
-                                <span class="text-gray-500 font-bold text-xs whitespace-nowrap">${dayData.water * 250}ml</span>
-                                <div class="flex space-x-1">
-                                    <button onclick="updateWater(-1)" class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50">
-                                        <i data-lucide="minus" class="w-3 h-3"></i>
-                                    </button>
-                                    <button onclick="updateWater(1)" class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm shadow-blue-200">
-                                        <i data-lucide="plus" class="w-3 h-3"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            <span class="text-[10px] text-gray-400 font-mono border border-gray-100 px-1.5 py-0.5 rounded">${displayCal} kcal</span>
                         </div>
-                    `}
-                </div>
-
-                <!-- 餐單列表 (Emoji版) -->
-                <div class="px-3 mt-4 space-y-3 pb-10">
-                    ${['breakfast', 'lunch', 'dinner'].map(type => {
-                        const meal = dayData.plan[type];
-                        const skipped = dayData.skipped[type];
-                        const swapped = dayData.swapped[type];
-                        const ingredients = generateIngredients(meal.name, dayData.level, type);
-                        const displayCal = Math.round(targets.cal * mealRatios[type]);
-                        
-                        // 使用 Emoji 替代 Vector Icons
-                        const emojis = { breakfast: '☕', lunch: '☀️', dinner: '🌙' };
-                        const labels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐' };
-
-                        return `
-                            <div class="bg-white border rounded-xl p-4 shadow-sm transition-all ${skipped ? 'opacity-60 bg-gray-50 border-dashed border-gray-300' : 'border-gray-100'}">
-                                <div class="flex justify-between items-center mb-2">
-                                    <div class="flex items-center space-x-2 text-gray-700">
-                                        <span class="text-lg">${emojis[type]}</span>
-                                        <span class="text-sm font-bold text-gray-900">${labels[type]}</span>
-                                        ${swapped ? '<span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold">已更新</span>' : ''}
-                                    </div>
-                                    <span class="text-[10px] text-gray-400 font-mono border border-gray-100 px-1.5 py-0.5 rounded">
-                                        ${displayCal} kcal
-                                    </span>
+                        <div class="mb-3">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-base font-bold text-gray-800 leading-snug w-full ${skipped ? 'line-through' : ''}">${meal.name}</h3>
+                                <div class="flex space-x-1 ml-2 flex-shrink-0">
+                                    <button onclick="swapMeal('${type}')" class="p-1.5 rounded-full bg-gray-50 text-gray-400 hover:text-blue-600"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i></button>
+                                    <button onclick="toggleSkip('${type}')" class="p-1.5 rounded-full bg-gray-50 text-gray-400 hover:text-red-500"><i data-lucide="${skipped ? 'rotate-ccw' : 'x'}" class="w-3.5 h-3.5"></i></button>
                                 </div>
-
-                                <div class="mb-3">
-                                    <div class="flex justify-between items-start">
-                                        <h3 class="text-base font-bold text-gray-800 leading-snug w-full ${skipped ? 'line-through' : ''}">
-                                            ${meal.name}
-                                        </h3>
-                                        <div class="flex space-x-1 ml-2 flex-shrink-0">
-                                            <button onclick="swapMeal('${type}')" class="p-1.5 rounded-full bg-gray-50 text-gray-400 hover:text-blue-600">
-                                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                                            </button>
-                                            <button onclick="toggleSkip('${type}')" class="p-1.5 rounded-full bg-gray-50 text-gray-400 hover:text-red-500">
-                                                <i data-lucide="${skipped ? 'rotate-ccw' : 'x'}" class="w-3.5 h-3.5"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                ${!skipped ? `
-                                    <div class="space-y-1.5 mb-3">
-                                        ${ingredients.map(ing => `
-                                            <div class="flex items-start space-x-2">
-                                                <div class="mt-1 text-emerald-500 flex-shrink-0"><i data-lucide="check" class="w-3 h-3" stroke-width="3"></i></div>
-                                                <span class="text-xs leading-relaxed ${ing.highlight ? 'text-red-500 font-bold' : 'text-gray-600'}">
-                                                    ${ing.text}
-                                                </span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-
-                                    <div class="bg-[#FFFBEB] p-2 rounded-lg flex items-start space-x-2">
-                                        <div class="text-yellow-500 mt-0.5 flex-shrink-0"><i data-lucide="lightbulb" class="w-3 h-3"></i></div>
-                                        <span class="text-[10px] text-[#92400E] leading-relaxed font-medium">
-                                            ${dayData.level === 'Low' ? '減脂日：專注蛋白質與纖維，晚餐避免澱粉。' : '平衡/高碳日：適量碳水支持日常活動。'}
-                                        </span>
-                                    </div>
-                                ` : ''}
                             </div>
-                        `;
-                    }).join('')}
-                </div>
+                            ${!skipped ? `<div class="flex space-x-2 mt-1 text-[10px] text-gray-400"><span>P: ${meal.macros.p}g</span><span>C: ${Math.round(mealC)}g</span><span>F: ${meal.macros.f}g</span></div>` : ''}
+                        </div>
+                        ${!skipped ? `
+                            <div class="space-y-1.5 mb-3">
+                                ${ingredients.map(ing => `<div class="flex items-start space-x-2"><div class="mt-1 text-emerald-500 flex-shrink-0"><i data-lucide="check" class="w-3 h-3" stroke-width="3"></i></div><span class="text-xs leading-relaxed ${ing.highlight ? 'text-red-500 font-bold' : 'text-gray-600'}">${ing.text}</span></div>`).join('')}
+                            </div>
+                            <div class="bg-[#FFFBEB] p-2 rounded-lg flex items-start space-x-2">
+                                <div class="text-yellow-500 mt-0.5 flex-shrink-0"><i data-lucide="lightbulb" class="w-3 h-3"></i></div>
+                                <span class="text-[10px] text-[#92400E] leading-relaxed font-medium">${smartTip}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            html += `</div>`;
 
-                <!-- 菜單 Drawer (保持不變) -->
-                ${state.menuOpen ? `
+            // 5. Menu Drawer (Sorted)
+            if (state.menuOpen) {
+                const categoriesOrder = [
+                    { key: 'breakfast', label: '早餐 / 輕食' },
+                    { key: 'chicken', label: '雞肉料理' },
+                    { key: 'beef', label: '牛肉料理' },
+                    { key: 'seafood', label: '海鮮 / 魚類' },
+                    { key: 'pork', label: '豬肉料理' },
+                    { key: 'vegetarian', label: '素食 / 其他' }
+                ];
+                
+                html += `
                     <div class="fixed inset-0 z-50 flex justify-end">
                         <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" onclick="toggleMenu()"></div>
                         <div class="relative w-4/5 max-w-sm bg-white h-full shadow-2xl flex flex-col animate-slide-in">
                             <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                                 <h2 class="text-base font-bold text-gray-900">菜單資料庫</h2>
-                                <button onclick="toggleMenu()" class="p-1 rounded-full hover:bg-gray-200">
-                                    <i data-lucide="x" class="w-5 h-5"></i>
-                                </button>
+                                <button onclick="toggleMenu()" class="p-1 rounded-full hover:bg-gray-200"><i data-lucide="x" class="w-5 h-5"></i></button>
                             </div>
                             <div class="flex-1 overflow-y-auto p-4">
-                                <div class="space-y-2">
-                                    ${RECIPES.map(r => `
-                                        <div class="text-xs text-gray-700 p-2 bg-gray-50 rounded border border-gray-100">
-                                            ${r.name}
-                                        </div>
-                                    `).join('')}
+                                <div class="space-y-6">
+                                    ${categoriesOrder.map(cat => {
+                                        const catRecipes = RECIPES.filter(r => r.category === cat.key);
+                                        if (catRecipes.length === 0) return '';
+                                        return `
+                                            <div>
+                                                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 border-b border-gray-100 pb-1">${cat.label}</h3>
+                                                <div class="space-y-2">
+                                                    ${catRecipes.map(r => `
+                                                        <div class="text-xs text-gray-700 p-2 bg-gray-50 rounded border border-gray-100 flex justify-between items-center">
+                                                            <span class="font-medium">${r.name}</span>
+                                                            <div class="flex space-x-1 text-[9px] text-gray-400"><span>P${r.macros.p}</span><span>C${r.macros.c}</span><span>F${r.macros.f}</span></div>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
                                 </div>
                             </div>
                         </div>
                     </div>
-                ` : ''}
-            `;
+                `;
+            }
 
             app.innerHTML = html;
-            lucide.createIcons(); // 重新渲染圖標
+            lucide.createIcons();
         }
 
-        // --- 6. 啟動 ---
+        // 啟動
         initData();
         render();
 
