@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DietPlanner Pro</title>
+    <title>DietPlanner Pro - Smart Week</title>
     
     <!-- 設定 iPhone 主畫面 Icon -->
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/kerryraquel/DietPlanner-Pro/9e23209bb060a3b519946300ee5fda95a419564c/IMG_2979.png">
@@ -17,11 +17,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #FAFAFA; }
-        /* 隱藏 Scrollbar 但保留功能 */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 模擬 Framer Motion 的動畫 */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px) scale(0.98); }
             to { opacity: 1; transform: translateY(0) scale(1); }
@@ -39,12 +37,6 @@
         .animate-slide-in { 
             animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         }
-
-        /* 讓卡片點擊時有輕微縮放效果 */
-        .card-interaction:active {
-            transform: scale(0.98);
-            transition: transform 0.1s;
-        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -54,8 +46,11 @@
     </div>
 
     <script>
-        // --- 1. 數據庫與分類邏輯 (更新為 107 道菜式) ---
+        // --- 1. 數據庫與分類邏輯 ---
         const RAW_RECIPES = [
+            "0% Fat 希臘乳酪配白烚蛋", 
+            "去皮黑椒雞扒配西蘭花", 
+            "日式壽喜燒鍋 (紅蘿蔔/硬豆腐/金針菇/洋蔥/娃娃菜/肉片/魔芋絲)", 
             "Cobb Salad", "蝦仁魔芋絲青瓜雞蛋沙律", "辣三文魚波奇碗", "味噌椰香豬里肌蘑菇豆腐西蘭花烏冬", "Caesar Salad with Chicken Breast",
             "Shepherd / Cottage Pie", "洋蔥木耳炒雞蛋", "意式蔬菜意粉湯", "Toscana Salmon", "花椒青椒炒雞丁",
             "蘋果炖豬扒", "酸辣薯絲燘牛肉", "地中海蝦翠玉瓜彩椒", "法式菌菇炖雞", "輕量芝士牛肉蔬菜鍋",
@@ -80,9 +75,10 @@
             "法式橙香紙包魚", "翠玉瓜絲蝦仁餅"
         ];
 
-        // 輔助函數：根據菜名推斷 Emoji
         const getRecipeEmoji = (name, category) => {
             const n = name.toLowerCase();
+            if (n.includes('乳酪') || n.includes('yogurt')) return '🥣';
+            if (n.includes('壽喜燒') || n.includes('sukiyaki')) return '🍲';
             if (n.includes('oats') || n.includes('燕麥')) return '🥣';
             if (n.includes('sandwich') || n.includes('三文治') || n.includes('toast') || n.includes('多士')) return '🥪';
             if (n.includes('wrap') || n.includes('burrito') || n.includes('卷餅')) return '🌯';
@@ -90,32 +86,29 @@
             if (n.includes('pasta') || n.includes('意粉') || n.includes('螺絲粉')) return '🍝';
             if (n.includes('noodle') || n.includes('麵') || n.includes('烏冬') || n.includes('udon')) return '🍜';
             if (n.includes('soup') || n.includes('湯') || n.includes('鍋')) return '🥘';
-            
-            if (n.includes('蝦') || n.includes('shrimp') || n.includes('prawn')) return '🦐';
-            if (n.includes('魚') || n.includes('fish') || n.includes('salmon') || n.includes('tuna') || n.includes('鯖') || n.includes('鱸')) return '🐟';
-            if (n.includes('雞') || n.includes('chicken') || n.includes('poulet')) return '🐔';
-            if (n.includes('牛') || n.includes('beef') || n.includes('steak') || n.includes('meat')) return '🥩';
-            if (n.includes('豬') || n.includes('pork') || n.includes('肉絲') || n.includes('肉餅')) return '🐷';
-            if (n.includes('蛋') || n.includes('egg') || n.includes('frittata')) return '🍳';
+            if (n.includes('蝦') || n.includes('shrimp')) return '🦐';
+            if (n.includes('魚') || n.includes('fish') || n.includes('salmon') || n.includes('tuna') || n.includes('鯰')) return '🐟';
+            if (n.includes('雞') || n.includes('chicken')) return '🐔';
+            if (n.includes('牛') || n.includes('beef') || n.includes('steak')) return '🥩';
+            if (n.includes('豬') || n.includes('pork')) return '🐷';
+            if (n.includes('蛋') || n.includes('egg')) return '🍳';
             if (n.includes('豆腐') || n.includes('tofu')) return '🧊';
-            
             return '🍽️';
         };
 
-        // 輔助函數：根據菜名推斷分類與營養素
         const analyzeRecipe = (name) => {
             const n = name.toLowerCase();
             let category = 'other';
             let macros = { p: 0, c: 0, f: 0, cal: 0 };
 
             // 1. 分類
-            if (n.includes('oats') || n.includes('燕麥') || n.includes('toast') || n.includes('sandwich') || n.includes('frittata') || n.includes('breakfast') || n.includes('多士') || n.includes('三文治') || n.includes('pancake')) {
+            if (n.includes('oats') || n.includes('燕麥') || n.includes('toast') || n.includes('sandwich') || n.includes('frittata') || n.includes('breakfast') || n.includes('多士') || n.includes('三文治') || n.includes('乳酪')) {
                 category = 'breakfast';
             } else if (n.includes('雞') || n.includes('chicken') || n.includes('poulet')) {
                 category = 'chicken';
             } else if (n.includes('牛') || n.includes('beef') || n.includes('steak') || n.includes('carne')) {
                 category = 'beef';
-            } else if (n.includes('蝦') || n.includes('魚') || n.includes('salmon') || n.includes('fish') || n.includes('shrimp') || n.includes('seafood') || n.includes('tuna') || n.includes('鯖魚') || n.includes('鱸魚')) {
+            } else if (n.includes('蝦') || n.includes('魚') || n.includes('salmon') || n.includes('fish') || n.includes('shrimp') || n.includes('seafood') || n.includes('tuna') || n.includes('鯰')) {
                 category = 'seafood';
             } else if (n.includes('豬') || n.includes('pork') || n.includes('肉絲') || n.includes('肉餅')) {
                 category = 'pork';
@@ -123,30 +116,54 @@
                 category = 'vegetarian';
             }
 
-            // 2. 營養素估算 (根據分類給予基礎值)
+            // 2. 營養素估算 (基礎值)
             if (category === 'breakfast') {
-                macros = { p: 22, c: 45, f: 10 }; 
+                macros = { p: 20, c: 35, f: 10 }; 
             } else if (category === 'chicken') {
-                macros = { p: 38, c: 35, f: 10 }; 
+                macros = { p: 35, c: 35, f: 12 }; 
             } else if (category === 'beef') {
-                macros = { p: 35, c: 30, f: 16 }; 
+                macros = { p: 32, c: 30, f: 16 }; 
             } else if (category === 'seafood') {
-                macros = { p: 36, c: 35, f: 12 }; 
+                macros = { p: 34, c: 35, f: 12 }; 
             } else if (category === 'pork') {
-                macros = { p: 32, c: 30, f: 18 }; 
+                macros = { p: 30, c: 30, f: 18 }; 
             } else { 
-                macros = { p: 20, c: 45, f: 14 }; 
+                macros = { p: 20, c: 40, f: 14 }; 
             }
 
-            // 微調
-            if (n.includes('飯') || n.includes('麵') || n.includes('意粉') || n.includes('pasta') || n.includes('udon') || n.includes('薯') || n.includes('南瓜')) {
-                macros.c += 15;
+            // 3. 針對特定菜式的精確修正 (基於用戶 MFP 數據調整)
+            
+            // 修正：壽喜燒 (考慮肉類+豆腐的雙重蛋白質，以及湯底/蔬菜的熱量)
+            // MFP紀錄顯示約 550kcal。為了不讓總熱量爆表，我們設定為約 420kcal 的飽足份量。
+            if (n.includes('壽喜燒')) { 
+                macros.p = 45; // 肉 + 豆腐
+                macros.c = 25; // 大量蔬菜 + 壽喜燒汁糖分
+                macros.f = 16; // 肉脂 + 豆腐脂 + 湯底
+            } 
+            
+            // 修正：希臘乳酪 (考慮市售乳酪非純蛋白，且含蛋)
+            // MFP紀錄約 194kcal。
+            else if (n.includes('乳酪') || n.includes('yogurt')) {
+                macros.p = 18; // 1隻蛋(6g) + 100g乳酪(約8-10g)
+                macros.c = 12; // 乳酪自帶糖分
+                macros.f = 10; // 蛋黃(5g) + 乳酪脂肪
+            }
+
+            // 修正：黑椒雞扒 (考慮較大的主菜份量)
+            else if (n.includes('黑椒雞扒')) {
+                macros.p = 40; // 200g 生雞扒
+                macros.c = 15; // 西蘭花 + 少量醃料
+                macros.f = 12; // 烹飪油 + 雞肉脂肪
+            }
+
+            // 其他微調
+            else if (n.includes('飯') || n.includes('麵') || n.includes('意粉') || n.includes('pasta') || n.includes('udon') || n.includes('薯') || n.includes('南瓜')) {
+                macros.c += 10;
             } else if (n.includes('沙律') || n.includes('salad') || n.includes('湯') || n.includes('soup') || n.includes('蒟蒻') || n.includes('千張')) {
                 macros.c -= 10;
             }
 
             macros.cal = (macros.p * 4) + (macros.c * 4) + (macros.f * 9);
-
             return { category, macros };
         };
 
@@ -162,99 +179,89 @@
             };
         });
 
+        // 生成配料邏輯
         const generateIngredients = (name, level, type) => {
             let ings = [];
             const n = name.toLowerCase();
+            const isFasting = level === 'Fasting';
+            const isDinner = type === 'dinner';
             
-            if (n.includes('oats') || n.includes('燕麥')) return [{ text: '燕麥 (40-50g)', highlight: false }, { text: '牛奶/植物奶 (200ml)', highlight: false }, { text: '水果/奇亞籽', highlight: false }];
-            
-            const meatWeight = '120-150g'; 
-            if (n.includes('雞')) ings.push({ text: `雞肉: ${meatWeight}`, highlight: false });
-            else if (n.includes('牛')) ings.push({ text: `牛肉: ${meatWeight}`, highlight: false });
-            else if (n.includes('蝦')) ings.push({ text: '蝦仁 (15-20隻)', highlight: false });
-            else if (n.includes('魚') || n.includes('salmon') || n.includes('tuna')) ings.push({ text: '魚柳 (140g)', highlight: false });
-            else if (n.includes('蛋')) ings.push({ text: '雞蛋 (2隻)', highlight: false });
-            else ings.push({ text: '優質蛋白質 (140g)', highlight: false });
+            // --- 特殊菜式邏輯 ---
+            // 1. 壽喜燒 (份量調升以匹配熱量)
+            if (n.includes('壽喜燒')) {
+                ings.push({ text: '湯底：壽喜燒汁 (注意糖分) 或 昆布醬油', highlight: false });
+                ings.push({ text: `蛋白質組合：肉片 (120g) + 硬豆腐 (100g)`, highlight: true }); // 明確標示雙重蛋白
+                ings.push({ text: '大量配料：紅蘿蔔、金針菇、洋蔥、娃娃菜', highlight: false });
+                ings.push({ text: '主食：魔芋絲 (取代白飯)', highlight: true });
+                return ings;
+            }
 
-            ings.push({ text: '時令蔬菜 (250g+)', highlight: false });
+            // 2. 希臘乳酪
+            if (n.includes('乳酪') || n.includes('yogurt')) {
+                ings.push({ text: '希臘乳酪/希臘式乳酪 (100g-150g)', highlight: false });
+                ings.push({ text: '白烚蛋 (1隻)', highlight: false });
+                if (!isFasting) ings.push({ text: '搭配：少量藍莓或奇亞籽', highlight: false });
+                return ings;
+            }
+
+            // 3. 黑椒雞扒
+            if (n.includes('黑椒雞扒')) {
+                ings.push({ text: `去皮雞扒 (生重 ${isFasting ? '150g' : '200g'})`, highlight: false }); // 調高份量
+                ings.push({ text: '醃料：黑胡椒、少許鹽、蒜粉', highlight: false });
+                ings.push({ text: '配菜：西蘭花 (200g)', highlight: false });
+            }
+
+            // --- 通用邏輯 ---
+            if (n.includes('oats') || n.includes('燕麥')) {
+                if (isFasting) return [{ text: '燕麥 (30g)', highlight: false }, { text: '水/無糖杏仁奶 (200ml)', highlight: false }, { text: '奇亞籽 (5g)', highlight: false }];
+                return [{ text: '燕麥 (40g)', highlight: false }, { text: '低脂牛奶/豆漿 (200ml)', highlight: false }, { text: '水果 (半個拳頭)', highlight: false }];
+            }
+
+            let meatWeight = '150g'; // 默認份量調高至 150g 以更接近實際飲食
+            if (isFasting) meatWeight = '120g'; 
+            
+            if (ings.length === 0) { 
+                if (n.includes('雞')) ings.push({ text: `雞胸/雞柳 (生重 ${meatWeight})`, highlight: false });
+                else if (n.includes('牛')) ings.push({ text: `瘦牛肉 (生重 ${isFasting ? '110g' : '130g'})`, highlight: false });
+                else if (n.includes('蝦')) ings.push({ text: `蝦仁 (${isFasting ? '12隻' : '15-18隻'})`, highlight: false });
+                else if (n.includes('魚') || n.includes('salmon') || n.includes('tuna')) ings.push({ text: `魚柳 (生重 ${isFasting ? '130g' : '150g'})`, highlight: false });
+                else if (n.includes('蛋')) ings.push({ text: `雞蛋 (${isFasting ? '1隻+2蛋白' : '2隻'})`, highlight: false });
+                else ings.push({ text: `優質蛋白質 (生重 ${meatWeight})`, highlight: false });
+
+                ings.push({ text: '時令蔬菜 (250g+)', highlight: false });
+            }
 
             if (type === 'breakfast') {
-                ings.push({ text: '全麥麵包/燕麥/蕃薯', highlight: false });
+                if (!n.includes('乳酪')) {
+                    if (isFasting) ings.push({ text: '全麥麵包 (1片) 或 略過澱粉', highlight: true });
+                    else ings.push({ text: '全麥麵包 (1-2片) / 燕麥 (40g)', highlight: false });
+                }
             } else {
-                if (level === 'Low') ings.push({ text: '澱粉減半 (半碗飯/拳頭大蕃薯/蒟蒻代替)', highlight: true });
-                else ings.push({ text: '1碗飯 / 1個大薯仔 / 1份麵', highlight: false });
+                if (n.includes('壽喜燒')) {
+                } else if (isFasting) {
+                    ings.push({ text: '🚫 輕斷食日：不吃主食，多吃蔬菜', highlight: true });
+                } else if (isDinner) {
+                    if (level === 'High') ings.push({ text: '白飯 (100g) / 薯仔 (1個)', highlight: false });
+                    else ings.push({ text: '🔸 晚餐建議：只吃蔬菜+蛋白質 (無澱粉)', highlight: true });
+                } else {
+                    if (level === 'Low') ings.push({ text: '飯 (100g) / 蕃薯 (120g) / 蒟蒻麵', highlight: true });
+                    else if (level === 'Medium') ings.push({ text: '飯 (130g) / 意粉 (熟重 130g)', highlight: false });
+                    else ings.push({ text: '飯 (150g) / 薯仔 (中型2個)', highlight: false });
+                }
             }
             return ings;
         };
 
-        // --- 2. 智能貼士系統 ---
-        const INGREDIENT_TIPS = {
-            '三文魚': '三文魚富含Omega-3，煎煮時無需額外多加油，利用魚油本身的油脂即可。',
-            'salmon': '三文魚富含Omega-3，煎煮時無需額外多加油，利用魚油本身的油脂即可。',
-            '鯖魚': '鯖魚油脂豐富且含維生素D，建議乾煎或烤，搭配蘿蔔泥可解膩助消化。',
-            '蝦': '蝦仁易熟，變色即可起鍋，煮太久會導致肉質變硬流失鮮味。',
-            'shrimp': '蝦仁易熟，變色即可起鍋，煮太久會導致肉質變硬流失鮮味。',
-            '雞胸': '雞胸肉容易變柴，建議切片後用少許生粉或蛋白醃製，口感會更嫩滑。',
-            '雞髀': '雞髀肉去皮後脂肪含量大幅降低，是口感與健康的平衡選擇。',
-            'chicken': '雞肉富含蛋白質，建議去皮食用以減少飽和脂肪攝入。',
-            '牛': '牛肉含有肌酸，適合運動日食用。切牛肉時逆著紋路切，口感會更軟嫩。',
-            'beef': '牛肉含有肌酸，適合運動日食用。切牛肉時逆著紋路切，口感會更軟嫩。',
-            '豆腐': '豆腐是植物性蛋白之王，與蛋類搭配食用，氨基酸互補吸收率更高。',
-            'tofu': '豆腐是植物性蛋白之王，與蛋類搭配食用，氨基酸互補吸收率更高。',
-            '蛋': '蛋黃含有豐富卵磷脂，不需要刻意只吃蛋白，全蛋營養價值更完整。',
-            '燕麥': '燕麥含有β-葡聚醣，能提供持久飽腹感，搭配肉桂粉更有助穩定血糖。',
-            'oats': '燕麥含有β-葡聚醣，能提供持久飽腹感，搭配肉桂粉更有助穩定血糖。',
-            '薯仔': '薯仔冷卻後會產生抗性澱粉，有助於控制血糖，做成沙律是不錯的選擇。',
-            '南瓜': '南瓜屬於高澱粉蔬菜，食用時請減少當餐的米飯份量。',
-            '意粉': '煮意粉時水裡加鹽，煮至Al Dente（咬開有白點）的升糖指數(GI)比全熟更低。',
-            'pasta': '煮意粉時水裡加鹽，煮至Al Dente（咬開有白點）的升糖指數(GI)比全熟更低。',
-            '烏冬': '烏冬易消化但GI值較高，建議搭配大量蔬菜和蛋白質一起食用以平穩血糖。',
-            '粉絲': '粉絲容易吸油，建議用煮或涼拌的方式，避免炒粉絲攝入過多油脂。',
-            '芋絲': '芋絲/蒟蒻熱量極低且高纖，是減脂期增加飽腹感的神器。',
-            '多士': '選擇全麥或雜糧多士，比白麵包能提供更多的維生素B群和纖維。',
-            'wrap': '捲餅皮也有熱量，建議選擇全麥餅皮，並多包入生菜增加體積。',
-            '牛油果': '牛油果雖然是健康油脂，但熱量較高，建議每次控制在半個以內。',
-            'avocado': '牛油果雖然是健康油脂，但熱量較高，建議每次控制在半個以內。',
-            '西蘭花': '西蘭花富含維生素C，建議快炒或蒸煮，避免長時間水煮導致營養流失。',
-            '菠菜': '菠菜含有草酸，建議先焯水再料理，可減少澀味並幫助鈣質吸收。',
-            '蘑菇': '菌菇類含有多醣體，能增強免疫力，乾煎至出水後風味更濃郁。',
-            '番茄': '番茄加熱後茄紅素更容易被吸收，加一點點油炒效果更好。',
-            '蕃茄': '番茄加熱後茄紅素更容易被吸收，加一點點油炒效果更好。',
-            '沙律': '沙律醬是熱量陷阱，建議使用油醋汁、檸檬汁或希臘乳酪代替蛋黃醬。',
-            'salad': '沙律醬是熱量陷阱，建議使用油醋汁、檸檬汁或希臘乳酪代替蛋黃醬。',
-            '椰菜': '椰菜含有維生素U，對胃黏膜有保護作用，切絲生吃或快炒皆宜。',
-            '咖喱': '咖喱中的薑黃素有抗炎作用，加入黑胡椒能大幅提升薑黃素的吸收率。',
-            '泡菜': '發酵食品如泡菜含有益生菌，但鈉含量較高，建議搭配清淡的食材。',
-            '湯': '餐前喝湯能增加飽腹感，但要避免勾芡的濃湯，選擇清湯為佳。',
-            '肉餅': '做肉餅時加入豆腐或燕麥片，可以減少肉類脂肪攝入並增加口感軟嫩度。'
-        };
-
-        const CATEGORY_FALLBACK_TIPS = {
-            breakfast: "早餐攝取足夠蛋白質（如雞蛋、希臘乳酪）能有效減少下午的零食慾望。",
-            seafood: "魚類含有豐富的 Omega-3 脂肪酸，有助抗炎及心腦血管健康。",
-            chicken: "雞肉是極佳的低脂蛋白來源，搭配彩虹顏色的蔬菜營養更均衡。",
-            beef: "紅肉攝取量適中即可，搭配大量深色蔬菜可以平衡酸鹼值。",
-            pork: "豬肉選擇瘦肉部位（如梅頭瘦肉），蛋白質含量其實不輸牛肉。",
-            vegetarian: "素食餐點建議搭配維生素C豐富的蔬果，有助於植物性鐵質的吸收。"
-        };
-
-        function getSmartTip(mealType, dayLevel, category, recipeName) {
-            const lowerName = recipeName.toLowerCase();
-            for (const [key, tip] of Object.entries(INGREDIENT_TIPS)) {
-                if (lowerName.includes(key)) return tip;
-            }
-            if (dayLevel === 'Low' && mealType !== 'breakfast') return "低碳日記得多吃綠葉蔬菜，增加膳食纖維以維持飽腹感。";
-            if (CATEGORY_FALLBACK_TIPS[category]) return CATEGORY_FALLBACK_TIPS[category];
-            return "進食順序建議：先飲湯/水，再食菜，接著肉，最後才食飯。";
-        }
-
-        // --- 3. 狀態管理 ---
+        // --- 2. 狀態管理 ---
         const USER_TARGETS = { p: 94, c: 125, f: 42 };
-        const TARGET_CALORIES = (USER_TARGETS.p * 4) + (USER_TARGETS.c * 4) + (USER_TARGETS.f * 9);
+        const TARGET_CALORIES = 1250;
+        const FASTING_TARGETS = { p: 70, c: 50, f: 30, cal: 850 };
 
         const state = {
             currentDayIndex: new Date().getDay(),
             menuOpen: false,
+            selectorOpen: false, 
+            selectorTarget: { dayIndex: null, mealType: null }, 
             weeklyData: []
         };
 
@@ -262,7 +269,11 @@
             const breakfastOpts = RECIPES.filter(r => r.type === 'breakfast');
             const mainOpts = RECIPES.filter(r => r.type === 'lunch_dinner');
             const pick = (arr) => arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : RECIPES[0];
-            const patternMap = { 1: 'Low', 2: 'Low', 3: 'Medium', 4: 'Medium', 5: 'Low', 6: 'High', 0: 'Medium' };
+            
+            const patternMap = { 
+                1: 'Fasting', 4: 'Fasting', 
+                2: 'Low', 3: 'Medium', 5: 'Low', 6: 'High', 0: 'Medium' 
+            };
 
             for(let i=0; i<7; i++) {
                 state.weeklyData.push({
@@ -281,16 +292,42 @@
             }
         }
 
-        // --- 4. 操作函數 ---
+        // --- 3. 操作函數 ---
         window.setDay = (index) => { state.currentDayIndex = index; render(); };
         window.toggleMenu = () => { state.menuOpen = !state.menuOpen; render(); };
-        window.toggleMode = () => {
-            const levels = ['Low', 'Medium', 'High'];
-            const day = state.weeklyData[state.currentDayIndex];
-            const currentIdx = levels.indexOf(day.level);
-            day.level = levels[(currentIdx + 1) % 3];
+        
+        window.openRecipeSelector = (mealType) => {
+            state.selectorTarget = { dayIndex: state.currentDayIndex, mealType: mealType };
+            state.selectorOpen = true;
             render();
         };
+
+        window.closeRecipeSelector = () => {
+            state.selectorOpen = false;
+            render();
+        };
+
+        window.selectRecipe = (recipeId) => {
+            const { dayIndex, mealType } = state.selectorTarget;
+            const recipe = RECIPES.find(r => r.id === recipeId);
+            
+            if (recipe) {
+                state.weeklyData[dayIndex].plan[mealType] = recipe;
+                state.weeklyData[dayIndex].swapped[mealType] = true;
+                state.weeklyData[dayIndex].skipped[mealType] = false;
+            }
+            state.selectorOpen = false;
+            render();
+        };
+
+        window.toggleMode = () => {
+            const levels = ['Low', 'Medium', 'High', 'Fasting'];
+            const day = state.weeklyData[state.currentDayIndex];
+            const currentIdx = levels.indexOf(day.level);
+            day.level = levels[(currentIdx + 1) % 4];
+            render();
+        };
+        
         window.toggleBrazilNut = () => {
             const day = state.weeklyData[state.currentDayIndex];
             day.brazilNut = !day.brazilNut;
@@ -330,12 +367,15 @@
             render();
         };
 
-        // --- 5. 渲染函數 ---
+        // --- 4. 渲染函數 ---
         function render() {
             const app = document.getElementById('app');
             const dayData = state.weeklyData[state.currentDayIndex];
+            const isFasting = dayData.level === 'Fasting';
             
-            // 計算營養
+            const currentTarget = isFasting ? FASTING_TARGETS : USER_TARGETS;
+            const currentTargetCal = isFasting ? FASTING_TARGETS.cal : TARGET_CALORIES;
+
             let currentCal = 0, currentP = 0, currentC = 0, currentF = 0;
             if (dayData.brazilNut) { currentCal += 33; currentP += 1; currentC += 0.5; currentF += 3.5; }
 
@@ -343,25 +383,43 @@
                 if (!dayData.skipped[type]) {
                     const meal = dayData.plan[type];
                     let mealC = meal.macros.c;
-                    if (dayData.level === 'Low' && type !== 'breakfast') mealC = mealC * 0.7;
-                    currentP += meal.macros.p;
+                    let mealP = meal.macros.p;
+                    let mealF = meal.macros.f;
+
+                    if (isFasting) {
+                        mealC = mealC * 0.3; 
+                        mealP = mealP * 0.8; 
+                        mealF = mealF * 0.7; 
+                    } else if (dayData.level === 'Low') {
+                        if (type !== 'breakfast') mealC = mealC * 0.5; 
+                    } else if (type === 'dinner' && dayData.level !== 'High') {
+                        mealC = mealC * 0.2; 
+                    }
+
+                    currentP += mealP;
                     currentC += mealC;
-                    currentF += meal.macros.f;
-                    currentCal += (meal.macros.p * 4) + (mealC * 4) + (meal.macros.f * 9);
+                    currentF += mealF;
+                    currentCal += (mealP * 4) + (mealC * 4) + (mealF * 9);
                 }
             });
 
             const getLevelStyle = (level) => {
                 if (level === 'Low') return { bg: 'bg-emerald-100', text: 'text-emerald-700', bar: 'bg-emerald-500', icon: 'leaf' };
                 if (level === 'Medium') return { bg: 'bg-blue-100', text: 'text-blue-700', bar: 'bg-blue-500', icon: 'battery' };
-                return { bg: 'bg-orange-100', text: 'text-orange-700', bar: 'bg-orange-500', icon: 'flame' };
+                if (level === 'High') return { bg: 'bg-orange-100', text: 'text-orange-700', bar: 'bg-orange-500', icon: 'flame' };
+                if (level === 'Fasting') return { bg: 'bg-purple-100', text: 'text-purple-700', bar: 'bg-purple-500', icon: 'sparkles' };
+                return { bg: 'bg-gray-100', text: 'text-gray-700', bar: 'bg-gray-500', icon: 'circle' };
             };
             const levelStyle = getLevelStyle(dayData.level);
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+            // 計算顯示順序：從今天開始
+            const realTodayIndex = new Date().getDay(); 
+            const orderedIndices = Array.from({length: 7}, (_, i) => (realTodayIndex + i) % 7);
+
             let html = '';
 
-            // 1. Header
+            // Header
             html += `
                 <div class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 pt-3 pb-2 px-3 shadow-sm">
                     <div class="flex justify-between items-center mb-2">
@@ -369,14 +427,15 @@
                         <button onclick="toggleMenu()" class="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"><i data-lucide="menu" class="w-5 h-5"></i></button>
                     </div>
                     <div class="grid grid-cols-7 gap-1.5">
-                        ${state.weeklyData.map((d, i) => {
-                            const isToday = i === state.currentDayIndex;
+                        ${orderedIndices.map(i => {
+                            const d = state.weeklyData[i];
+                            const isSelected = i === state.currentDayIndex;
                             const dStyle = getLevelStyle(d.level);
-                            return `<button onclick="setDay(${i})" class="relative h-14 rounded-xl border transition-all duration-300 ${isToday ? 'border-gray-800 bg-white shadow-lg scale-105 ring-1 ring-gray-800 z-10' : 'border-gray-100 bg-white opacity-70 hover:opacity-100'}">
+                            return `<button onclick="setDay(${i})" class="relative h-14 rounded-xl border transition-all duration-300 ${isSelected ? 'border-gray-800 bg-white shadow-lg scale-105 ring-1 ring-gray-800 z-10' : 'border-gray-100 bg-white opacity-70 hover:opacity-100'}">
                                 <div class="absolute top-0 right-0 w-3 h-3 rounded-bl-xl ${dStyle.bg}"></div>
                                 <div class="h-full flex flex-col justify-center items-center">
                                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">${days[i]}</span>
-                                    <span class="text-sm font-extrabold ${isToday ? 'text-gray-900' : 'text-gray-500'}">${d.level[0]}</span>
+                                    <span class="text-sm font-extrabold ${isSelected ? 'text-gray-900' : 'text-gray-500'}">${d.level[0]}</span>
                                 </div>
                             </button>`;
                         }).join('')}
@@ -384,44 +443,47 @@
                 </div>
             `;
 
-            // 2. Dashboard
+            // Dashboard
             html += `
                 <div class="px-4 mt-4">
                     <div class="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
                         <div class="flex justify-between items-center mb-3">
                             <span class="flex items-center space-x-1.5 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${levelStyle.bg} ${levelStyle.text}">
-                                <i data-lucide="${levelStyle.icon}" class="w-3 h-3"></i><span>${dayData.level} Carb</span>
+                                <i data-lucide="${levelStyle.icon}" class="w-3 h-3"></i><span>${dayData.level === 'Fasting' ? 'Fasting Day' : dayData.level + ' Carb'}</span>
                             </span>
                             <div class="flex items-center space-x-2">
                                 <button onclick="toggleBrazilNut()" class="px-2 py-1 rounded-full border text-[10px] font-bold transition-all ${dayData.brazilNut ? 'bg-amber-100 text-amber-800 border-amber-200 shadow-sm' : 'bg-gray-50 text-gray-400 border-gray-100'}">🌰 巴西堅果</button>
-                                <button onclick="toggleMode()" class="w-8 h-5 rounded-full relative transition-colors ${dayData.level === 'Low' ? 'bg-emerald-500' : dayData.level === 'Medium' ? 'bg-blue-500' : 'bg-orange-500'}">
-                                    <div class="absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-md transition-transform duration-300 ${dayData.level === 'Low' ? 'translate-x-0' : dayData.level === 'Medium' ? 'translate-x-1.5' : 'translate-x-3'}"></div>
+                                <button onclick="toggleMode()" class="w-8 h-5 rounded-full relative transition-colors ${dayData.level === 'Low' ? 'bg-emerald-500' : dayData.level === 'Medium' ? 'bg-blue-500' : dayData.level === 'High' ? 'bg-orange-500' : 'bg-purple-500'}">
+                                    <div class="absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-md transition-transform duration-300 ${dayData.level === 'Low' ? 'translate-x-0' : dayData.level === 'Medium' ? 'translate-x-1' : dayData.level === 'High' ? 'translate-x-2' : 'translate-x-3.5'}"></div>
                                 </button>
                             </div>
                         </div>
                         <div class="flex items-baseline mb-4">
                             <span class="text-3xl font-extrabold text-gray-900 mr-1.5">${Math.round(currentCal)}</span>
-                            <span class="text-sm text-gray-400 font-medium">/ ${Math.round(TARGET_CALORIES)} kcal</span>
+                            <span class="text-sm text-gray-400 font-medium">/ ${currentTargetCal} kcal</span>
                         </div>
                         <div class="grid grid-cols-3 gap-3">
                             <div class="bg-gray-50 p-2 rounded-xl border border-gray-100">
                                 <div class="flex justify-between text-[10px] mb-1.5"><span class="font-bold text-gray-500">Prot</span><span class="text-gray-900 font-bold">${Math.round(currentP)}g</span></div>
-                                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-slate-800 rounded-full transition-all duration-500" style="width: ${Math.min((currentP/USER_TARGETS.p)*100, 100)}%"></div></div>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-slate-800 rounded-full transition-all duration-500" style="width: ${Math.min((currentP/currentTarget.p)*100, 100)}%"></div></div>
+                                <div class="text-[9px] text-gray-400 text-right mt-1">Goal: ${currentTarget.p}g</div>
                             </div>
                             <div class="bg-gray-50 p-2 rounded-xl border border-gray-100">
                                 <div class="flex justify-between text-[10px] mb-1.5"><span class="font-bold text-gray-500">Carb</span><span class="text-gray-900 font-bold">${Math.round(currentC)}g</span></div>
-                                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="h-full rounded-full transition-all duration-500 ${levelStyle.bar}" style="width: ${Math.min((currentC/USER_TARGETS.c)*100, 100)}%"></div></div>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="h-full rounded-full transition-all duration-500 ${levelStyle.bar}" style="width: ${Math.min((currentC/currentTarget.c)*100, 100)}%"></div></div>
+                                <div class="text-[9px] text-gray-400 text-right mt-1">Goal: ${currentTarget.c}g</div>
                             </div>
                             <div class="bg-gray-50 p-2 rounded-xl border border-gray-100">
                                 <div class="flex justify-between text-[10px] mb-1.5"><span class="font-bold text-gray-500">Fat</span><span class="text-gray-900 font-bold">${Math.round(currentF)}g</span></div>
-                                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-yellow-500 rounded-full transition-all duration-500" style="width: ${Math.min((currentF/USER_TARGETS.f)*100, 100)}%"></div></div>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-yellow-500 rounded-full transition-all duration-500" style="width: ${Math.min((currentF/currentTarget.f)*100, 100)}%"></div></div>
+                                <div class="text-[9px] text-gray-400 text-right mt-1">Goal: ${currentTarget.f}g</div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
 
-            // 3. Water Tracker
+            // Water Tracker
             html += `<div class="px-4 mt-4">`;
             if (dayData.water >= 8) {
                 html += `
@@ -457,25 +519,31 @@
             }
             html += `</div>`;
 
-            // 4. Meals (Card Redesign)
+            // Meals
             html += `<div class="px-4 mt-5 space-y-5 pb-10">`;
             ['breakfast', 'lunch', 'dinner'].forEach((type, index) => {
                 const meal = dayData.plan[type];
                 const skipped = dayData.skipped[type];
                 const swapped = dayData.swapped[type];
                 const ingredients = generateIngredients(meal.name, dayData.level, type);
-                const smartTip = getSmartTip(type, dayData.level, meal.category, meal.name);
                 
                 let mealC = meal.macros.c;
-                if (dayData.level === 'Low' && type !== 'breakfast') mealC = mealC * 0.7;
-                const displayCal = Math.round((meal.macros.p * 4) + (mealC * 4) + (meal.macros.f * 9));
-                
-                // 計算卡路里佔比 (假設每日目標 1600-1800 左右，這裡用 TARGET_CALORIES)
-                const calPercent = Math.min((displayCal / TARGET_CALORIES) * 100 * 3, 100); // *3 是因為一餐約佔 1/3
-                
+                let mealP = meal.macros.p;
+                let mealF = meal.macros.f;
+
+                if (isFasting) {
+                    mealC = mealC * 0.3; 
+                    mealP = mealP * 0.8;
+                    mealF = mealF * 0.7;
+                } else if (dayData.level === 'Low' && type !== 'breakfast') {
+                    mealC = mealC * 0.5;
+                } else if (type === 'dinner' && dayData.level !== 'High') {
+                    mealC = mealC * 0.2;
+                }
+
+                const displayCal = Math.round((mealP * 4) + (mealC * 4) + (mealF * 9));
+                const calPercent = Math.min((displayCal / currentTargetCal) * 100 * 3, 100); 
                 const labels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐' };
-                
-                // 動畫延遲
                 const delay = index * 100;
 
                 html += `
@@ -483,17 +551,15 @@
                         <div class="bg-white border-0 rounded-2xl p-5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] ring-1 ring-gray-100 transition-all duration-300 hover:shadow-xl relative overflow-hidden ${skipped ? 'opacity-60 grayscale' : ''}">
                             ${swapped ? '<div class="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl shadow-sm">已更新</div>' : ''}
                             
-                            <!-- Header Area -->
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex items-start space-x-3">
                                     <div class="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl shadow-inner border border-gray-100 flex-shrink-0">
                                         ${meal.emoji}
                                     </div>
-                                    <div>
+                                    <div class="flex-1 min-w-0 pr-2">
                                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">${labels[type]}</div>
-                                        <h3 class="text-base font-bold text-gray-900 leading-tight ${skipped ? 'line-through decoration-gray-400' : ''}">${meal.name}</h3>
+                                        <h3 class="text-base font-bold text-gray-900 leading-tight truncate ${skipped ? 'line-through decoration-gray-400' : ''}">${meal.name}</h3>
                                         
-                                        <!-- Calorie Progress Bar -->
                                         ${!skipped ? `
                                         <div class="mt-2 flex items-center space-x-2">
                                             <div class="text-xs font-bold text-gray-700">${displayCal} <span class="text-[10px] font-normal text-gray-400">kcal</span></div>
@@ -505,33 +571,26 @@
                                     </div>
                                 </div>
                                 <div class="flex flex-col space-y-1">
+                                    <button onclick="openRecipeSelector('${type}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:text-purple-600 hover:bg-purple-50 flex items-center justify-center transition-colors"><i data-lucide="list" class="w-4 h-4"></i></button>
                                     <button onclick="swapMeal('${type}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
                                     <button onclick="toggleSkip('${type}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"><i data-lucide="${skipped ? 'rotate-ccw' : 'x'}" class="w-4 h-4"></i></button>
                                 </div>
                             </div>
 
                             ${!skipped ? `
-                                <!-- Macros Badges -->
                                 <div class="flex space-x-2 mb-4">
-                                    <span class="px-2 py-1 rounded-md bg-slate-50 text-slate-600 text-[10px] font-bold border border-slate-100">P: ${meal.macros.p}g</span>
+                                    <span class="px-2 py-1 rounded-md bg-slate-50 text-slate-600 text-[10px] font-bold border border-slate-100">P: ${Math.round(mealP)}g</span>
                                     <span class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100">C: ${Math.round(mealC)}g</span>
-                                    <span class="px-2 py-1 rounded-md bg-amber-50 text-amber-600 text-[10px] font-bold border border-amber-100">F: ${meal.macros.f}g</span>
+                                    <span class="px-2 py-1 rounded-md bg-amber-50 text-amber-600 text-[10px] font-bold border border-amber-100">F: ${Math.round(mealF)}g</span>
                                 </div>
 
-                                <!-- Ingredients -->
-                                <div class="space-y-2 mb-4 bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
+                                <div class="space-y-2 mb-2 bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
                                     ${ingredients.map(ing => `
                                         <div class="flex items-start space-x-2.5">
                                             <div class="mt-1 text-emerald-500 flex-shrink-0"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i></div>
                                             <span class="text-xs leading-relaxed ${ing.highlight ? 'text-rose-500 font-bold' : 'text-gray-600'}">${ing.text}</span>
                                         </div>
                                     `).join('')}
-                                </div>
-
-                                <!-- Smart Tip -->
-                                <div class="bg-[#FFFBEB] p-3 rounded-xl border border-[#FEF3C7] flex items-start space-x-2.5 shadow-sm">
-                                    <div class="text-amber-500 mt-0.5 flex-shrink-0"><i data-lucide="lightbulb" class="w-4 h-4 fill-amber-500 text-amber-500"></i></div>
-                                    <span class="text-[11px] text-[#92400E] leading-relaxed font-medium">${smartTip}</span>
                                 </div>
                             ` : ''}
                         </div>
@@ -540,7 +599,7 @@
             });
             html += `</div>`;
 
-            // 5. Menu Drawer
+            // Menu Drawer (Read Only)
             if (state.menuOpen) {
                 const categoriesOrder = [
                     { key: 'breakfast', label: '早餐 / 輕食' },
@@ -576,10 +635,58 @@
                                                                 <span class="text-lg">${r.emoji}</span>
                                                                 <span class="font-medium">${r.name}</span>
                                                             </div>
-                                                            <div class="flex space-x-1.5 text-[9px] font-mono text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">
-                                                                <span>P${r.macros.p}</span><span>C${r.macros.c}</span><span>F${r.macros.f}</span>
-                                                            </div>
                                                         </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Recipe Selector Drawer (Interactive)
+            if (state.selectorOpen) {
+                const isBreakfast = state.selectorTarget.mealType === 'breakfast';
+                
+                const categoriesOrder = isBreakfast 
+                    ? [{ key: 'breakfast', label: '早餐 / 輕食' }]
+                    : [
+                        { key: 'chicken', label: '雞肉料理' },
+                        { key: 'beef', label: '牛肉料理' },
+                        { key: 'seafood', label: '海鮮 / 魚類' },
+                        { key: 'pork', label: '豬肉料理' },
+                        { key: 'vegetarian', label: '素食 / 其他' }
+                    ];
+
+                html += `
+                    <div class="fixed inset-0 z-[60] flex justify-end">
+                        <div class="absolute inset-0 bg-gray-900/30 backdrop-blur-sm transition-opacity" onclick="closeRecipeSelector()"></div>
+                        <div class="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-slide-in ml-auto">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white z-10">
+                                <div>
+                                    <h2 class="text-lg font-bold text-gray-900">選擇${isBreakfast ? '早餐' : '主餐'}</h2>
+                                    <p class="text-xs text-gray-500">點擊以更換餐點</p>
+                                </div>
+                                <button onclick="closeRecipeSelector()" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="flex-1 overflow-y-auto p-4 hide-scrollbar bg-gray-50">
+                                <div class="space-y-6">
+                                    ${categoriesOrder.map(cat => {
+                                        const catRecipes = RECIPES.filter(r => r.category === cat.key);
+                                        if (catRecipes.length === 0) return '';
+                                        return `
+                                            <div>
+                                                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 px-1">${cat.label}</h3>
+                                                <div class="grid grid-cols-1 gap-2">
+                                                    ${catRecipes.map(r => `
+                                                        <button onclick="selectRecipe(${r.id})" class="text-left w-full p-3 bg-white rounded-xl border border-gray-200 shadow-sm hover:border-blue-500 hover:ring-1 hover:ring-blue-500 transition-all flex items-center space-x-3 group">
+                                                            <span class="text-2xl bg-gray-50 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-blue-50">${r.emoji}</span>
+                                                            <span class="text-sm font-medium text-gray-700 group-hover:text-blue-700 leading-tight">${r.name}</span>
+                                                        </button>
                                                     `).join('')}
                                                 </div>
                                             </div>
@@ -596,7 +703,6 @@
             lucide.createIcons();
         }
 
-        // 啟動
         initData();
         render();
 
