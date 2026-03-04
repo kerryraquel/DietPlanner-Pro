@@ -20,6 +20,14 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
+        /* 自定義多行截斷，確保舊瀏覽器兼容 */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px) scale(0.98); }
             to { opacity: 1; transform: translateY(0) scale(1); }
@@ -72,17 +80,21 @@
             "微波爐版咖喱洋蔥紅蘿蔔椰菜花魚丸烏冬", "微波爐版蕃茄巴沙魚魔芋絲豆腐鍋", "微波爐版照燒雞腿肉蔬菜煲", "Overnight rolled oats + milk + small amount of fruit and chia seeds", "清蒸豆腐娃娃菜肉餅",
             "法式巴斯克炖雞配西蘭花拌蒟蒻米飯", "水浸吞拿魚雞蛋青瓜螺絲粉沙律配希臘沙律", "雙椒牛肉千張麵", "Cajun香料雞髀飯", "Chilli Con Carne",
             "蘋果肉桂烤燕麥", "蝦仁牛肉拌麵", "檸檬乾煎雞", "椰菜絲燘肉絲", "薯絲娃娃菜牛肉片蒸蛋",
-            "法式橙香紙包魚", "翠玉瓜絲蝦仁餅"
+            "法式橙香紙包魚", "翠玉瓜絲蝦仁餅",
+            "生薑豬肉燒配薯仔配日式椰菜沙律蓋飯", 
+            "地中海乳酪雞肉碗",
+            "法式焦糖洋蔥炖牛肉",
+            "涼拌雞胸木耳薯絲西蘭花"
         ];
 
         const getRecipeEmoji = (name, category) => {
             const n = name.toLowerCase();
             if (n.includes('乳酪') || n.includes('yogurt')) return '🥣';
-            if (n.includes('壽喜燒') || n.includes('sukiyaki')) return '🍲';
+            if (n.includes('壽喜燒') || n.includes('sukiyaki') || n.includes('stew') || n.includes('炖')) return '🍲';
             if (n.includes('oats') || n.includes('燕麥')) return '🥣';
             if (n.includes('sandwich') || n.includes('三文治') || n.includes('toast') || n.includes('多士')) return '🥪';
             if (n.includes('wrap') || n.includes('burrito') || n.includes('卷餅')) return '🌯';
-            if (n.includes('salad') || n.includes('沙律') || n.includes('bowl')) return '🥗';
+            if (n.includes('salad') || n.includes('沙律') || n.includes('bowl') || n.includes('涼拌')) return '🥗';
             if (n.includes('pasta') || n.includes('意粉') || n.includes('螺絲粉')) return '🍝';
             if (n.includes('noodle') || n.includes('麵') || n.includes('烏冬') || n.includes('udon')) return '🍜';
             if (n.includes('soup') || n.includes('湯') || n.includes('鍋')) return '🥘';
@@ -102,7 +114,7 @@
             let macros = { p: 0, c: 0, f: 0, cal: 0 };
 
             // 1. 分類
-            if (n.includes('oats') || n.includes('燕麥') || n.includes('toast') || n.includes('sandwich') || n.includes('frittata') || n.includes('breakfast') || n.includes('多士') || n.includes('三文治') || n.includes('乳酪')) {
+            if (n.includes('oats') || n.includes('燕麥') || n.includes('toast') || n.includes('sandwich') || n.includes('frittata') || n.includes('breakfast') || (n.includes('乳酪') && !n.includes('雞') && !n.includes('牛') && !n.includes('豬')) || n.includes('多士') || n.includes('三文治')) {
                 category = 'breakfast';
             } else if (n.includes('雞') || n.includes('chicken') || n.includes('poulet')) {
                 category = 'chicken';
@@ -110,50 +122,56 @@
                 category = 'beef';
             } else if (n.includes('蝦') || n.includes('魚') || n.includes('salmon') || n.includes('fish') || n.includes('shrimp') || n.includes('seafood') || n.includes('tuna') || n.includes('鯰')) {
                 category = 'seafood';
-            } else if (n.includes('豬') || n.includes('pork') || n.includes('肉絲') || n.includes('肉餅')) {
+            } else if (n.includes('豬') || n.includes('pork') || n.includes('肉絲') || n.includes('肉餅') || n.includes('豚肉')) {
                 category = 'pork';
             } else {
                 category = 'vegetarian';
             }
 
-            // 2. 營養素估算 (基礎值)
+            // 2. 營養素估算 (基礎值 - 調整為高蛋白低碳)
             if (category === 'breakfast') {
-                macros = { p: 20, c: 35, f: 10 }; 
+                macros = { p: 22, c: 35, f: 10 }; 
             } else if (category === 'chicken') {
-                macros = { p: 35, c: 35, f: 12 }; 
+                macros = { p: 35, c: 30, f: 12 }; 
             } else if (category === 'beef') {
-                macros = { p: 32, c: 30, f: 16 }; 
+                macros = { p: 32, c: 28, f: 16 }; 
             } else if (category === 'seafood') {
-                macros = { p: 34, c: 35, f: 12 }; 
+                macros = { p: 34, c: 30, f: 12 }; 
             } else if (category === 'pork') {
-                macros = { p: 30, c: 30, f: 18 }; 
+                macros = { p: 30, c: 28, f: 18 }; 
             } else { 
-                macros = { p: 20, c: 40, f: 14 }; 
+                macros = { p: 20, c: 35, f: 14 }; 
             }
 
-            // 3. 針對特定菜式的精確修正 (基於用戶 MFP 數據調整)
+            // 3. 針對特定菜式的精確修正
             
-            // 修正：壽喜燒 (考慮肉類+豆腐的雙重蛋白質，以及湯底/蔬菜的熱量)
-            // MFP紀錄顯示約 550kcal。為了不讓總熱量爆表，我們設定為約 420kcal 的飽足份量。
+            // 修正：壽喜燒
             if (n.includes('壽喜燒')) { 
-                macros.p = 45; // 肉 + 豆腐
-                macros.c = 25; // 大量蔬菜 + 壽喜燒汁糖分
-                macros.f = 16; // 肉脂 + 豆腐脂 + 湯底
+                macros.p = 45; macros.c = 25; macros.f = 16; 
             } 
-            
-            // 修正：希臘乳酪 (考慮市售乳酪非純蛋白，且含蛋)
-            // MFP紀錄約 194kcal。
-            else if (n.includes('乳酪') || n.includes('yogurt')) {
-                macros.p = 18; // 1隻蛋(6g) + 100g乳酪(約8-10g)
-                macros.c = 12; // 乳酪自帶糖分
-                macros.f = 10; // 蛋黃(5g) + 乳酪脂肪
+            // 修正：希臘乳酪 (早餐)
+            else if ((n.includes('乳酪') || n.includes('yogurt')) && category === 'breakfast') {
+                macros.p = 18; macros.c = 12; macros.f = 10; 
             }
-
-            // 修正：黑椒雞扒 (考慮較大的主菜份量)
+            // 修正：黑椒雞扒
             else if (n.includes('黑椒雞扒')) {
-                macros.p = 40; // 200g 生雞扒
-                macros.c = 15; // 西蘭花 + 少量醃料
-                macros.f = 12; // 烹飪油 + 雞肉脂肪
+                macros.p = 40; macros.c = 15; macros.f = 12; 
+            }
+            // 修正：生薑豬肉燒 (Pork Ginger)
+            else if (n.includes('生薑豬肉')) {
+                macros.p = 32; macros.c = 38; macros.f = 16;
+            }
+            // 修正：地中海乳酪雞肉碗
+            else if (n.includes('地中海乳酪雞肉')) {
+                macros.p = 38; macros.c = 35; macros.f = 14;
+            }
+            // 修正：法式焦糖洋蔥炖牛肉
+            else if (n.includes('法式焦糖洋蔥炖牛肉')) {
+                macros.p = 35; macros.c = 32; macros.f = 18; // 牛肉脂肪稍高
+            }
+            // 修正：涼拌雞胸木耳
+            else if (n.includes('涼拌雞胸')) {
+                macros.p = 36; macros.c = 25; macros.f = 10; // 低脂低碳
             }
 
             // 其他微調
@@ -186,27 +204,60 @@
             const isFasting = level === 'Fasting';
             const isDinner = type === 'dinner';
             
-            // --- 特殊菜式邏輯 ---
-            // 1. 壽喜燒 (份量調升以匹配熱量)
+            // --- 特殊菜式邏輯 (新增部分) ---
+            
+            // 108. 生薑豬肉燒
+            if (n.includes('生薑豬肉')) {
+                ings.push({ text: `瘦豬肉片/梅頭肉 (生重 ${isFasting ? '120g' : '150g'})`, highlight: false });
+                ings.push({ text: '醬汁：生薑泥、醬油、味醂(少量)', highlight: false });
+                ings.push({ text: '配菜：日式椰菜絲沙律 (大量)', highlight: false });
+                if (!isFasting) ings.push({ text: '主食：薯仔 (煎/烤) 代替白飯', highlight: true });
+                return ings;
+            }
+
+            // 109. 地中海乳酪雞肉碗
+            if (n.includes('地中海乳酪雞肉')) {
+                ings.push({ text: `雞胸肉 (生重 ${isFasting ? '150g' : '200g'}) - 希臘乳酪醃製`, highlight: false });
+                ings.push({ text: '烤蔬菜：紅黃彩椒、紅洋蔥', highlight: false });
+                ings.push({ text: '沙律：青瓜丁、番茄仔', highlight: false });
+                if (!isFasting) ings.push({ text: '主食：紅薯塊 (烤)', highlight: true });
+                return ings;
+            }
+
+            // 110. 法式焦糖洋蔥炖牛肉
+            if (n.includes('法式焦糖洋蔥炖牛肉')) {
+                ings.push({ text: `瘦牛肋條/牛腱 (生重 ${isFasting ? '120g' : '150g'})`, highlight: false });
+                ings.push({ text: '蔬菜基底：洋蔥(炒至焦糖化)、紅蘿蔔', highlight: false });
+                ings.push({ text: '配菜：西蘭花 (蒸/煮)', highlight: false });
+                if (!isFasting) ings.push({ text: '主食：薯仔 (同炖)', highlight: true });
+                return ings;
+            }
+
+            // 111. 涼拌雞胸木耳薯絲西蘭花
+            if (n.includes('涼拌雞胸')) {
+                ings.push({ text: `雞胸肉絲 (生重 ${isFasting ? '150g' : '180g'})`, highlight: false });
+                ings.push({ text: '高纖配料：黑木耳絲、西蘭花', highlight: false });
+                ings.push({ text: '調味：蒜末、醋、少許代糖、辣椒', highlight: false });
+                if (!isFasting) ings.push({ text: '主食：薯仔絲 (焯水涼拌)', highlight: true });
+                return ings;
+            }
+
+            // --- 既有特殊菜式 ---
             if (n.includes('壽喜燒')) {
                 ings.push({ text: '湯底：壽喜燒汁 (注意糖分) 或 昆布醬油', highlight: false });
-                ings.push({ text: `蛋白質組合：肉片 (120g) + 硬豆腐 (100g)`, highlight: true }); // 明確標示雙重蛋白
+                ings.push({ text: `蛋白質組合：肉片 (120g) + 硬豆腐 (100g)`, highlight: true }); 
                 ings.push({ text: '大量配料：紅蘿蔔、金針菇、洋蔥、娃娃菜', highlight: false });
                 ings.push({ text: '主食：魔芋絲 (取代白飯)', highlight: true });
                 return ings;
             }
-
-            // 2. 希臘乳酪
-            if (n.includes('乳酪') || n.includes('yogurt')) {
+            if ((n.includes('乳酪') || n.includes('yogurt')) && type === 'breakfast') {
                 ings.push({ text: '希臘乳酪/希臘式乳酪 (100g-150g)', highlight: false });
                 ings.push({ text: '白烚蛋 (1隻)', highlight: false });
                 if (!isFasting) ings.push({ text: '搭配：少量藍莓或奇亞籽', highlight: false });
                 return ings;
             }
-
-            // 3. 黑椒雞扒
             if (n.includes('黑椒雞扒')) {
-                ings.push({ text: `去皮雞扒 (生重 ${isFasting ? '150g' : '200g'})`, highlight: false }); // 調高份量
+                ings.push({ text: `去皮雞扒 (生重 ${isFasting ? '150g' : '200g'})`, highlight: false }); 
                 ings.push({ text: '醃料：黑胡椒、少許鹽、蒜粉', highlight: false });
                 ings.push({ text: '配菜：西蘭花 (200g)', highlight: false });
             }
@@ -217,7 +268,7 @@
                 return [{ text: '燕麥 (40g)', highlight: false }, { text: '低脂牛奶/豆漿 (200ml)', highlight: false }, { text: '水果 (半個拳頭)', highlight: false }];
             }
 
-            let meatWeight = '150g'; // 默認份量調高至 150g 以更接近實際飲食
+            let meatWeight = '150g'; 
             if (isFasting) meatWeight = '120g'; 
             
             if (ings.length === 0) { 
@@ -237,7 +288,8 @@
                     else ings.push({ text: '全麥麵包 (1-2片) / 燕麥 (40g)', highlight: false });
                 }
             } else {
-                if (n.includes('壽喜燒')) {
+                if (n.includes('壽喜燒') || n.includes('生薑豬肉') || n.includes('地中海乳酪雞肉') || n.includes('法式焦糖洋蔥') || n.includes('涼拌雞胸')) {
+                    // 這些菜式已有特定主食邏輯
                 } else if (isFasting) {
                     ings.push({ text: '🚫 輕斷食日：不吃主食，多吃蔬菜', highlight: true });
                 } else if (isDinner) {
@@ -252,10 +304,11 @@
             return ings;
         };
 
-        // --- 2. 狀態管理 ---
-        const USER_TARGETS = { p: 94, c: 125, f: 42 };
+        // --- 2. 狀態管理 (更新目標數值) ---
+        // 目標：1250 kcal, P 94g, C 110g, F 45g
+        const USER_TARGETS = { p: 94, c: 110, f: 45 };
         const TARGET_CALORIES = 1250;
-        const FASTING_TARGETS = { p: 70, c: 50, f: 30, cal: 850 };
+        const FASTING_TARGETS = { p: 75, c: 50, f: 30, cal: 850 };
 
         const state = {
             currentDayIndex: new Date().getDay(),
@@ -413,7 +466,6 @@
             const levelStyle = getLevelStyle(dayData.level);
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-            // 計算顯示順序：從今天開始
             const realTodayIndex = new Date().getDay(); 
             const orderedIndices = Array.from({length: 7}, (_, i) => (realTodayIndex + i) % 7);
 
@@ -552,13 +604,15 @@
                             ${swapped ? '<div class="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl shadow-sm">已更新</div>' : ''}
                             
                             <div class="flex items-start justify-between mb-4">
-                                <div class="flex items-start space-x-3">
+                                <div class="flex items-start space-x-3 w-full">
                                     <div class="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl shadow-inner border border-gray-100 flex-shrink-0">
                                         ${meal.emoji}
                                     </div>
                                     <div class="flex-1 min-w-0 pr-2">
                                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">${labels[type]}</div>
-                                        <h3 class="text-base font-bold text-gray-900 leading-tight truncate ${skipped ? 'line-through decoration-gray-400' : ''}">${meal.name}</h3>
+                                        
+                                        <!-- 修正：移除 truncate，改用 line-clamp-2 允許兩行顯示 -->
+                                        <h3 class="text-base font-bold text-gray-900 leading-snug line-clamp-2 ${skipped ? 'line-through decoration-gray-400' : ''}">${meal.name}</h3>
                                         
                                         ${!skipped ? `
                                         <div class="mt-2 flex items-center space-x-2">
@@ -570,7 +624,7 @@
                                         ` : ''}
                                     </div>
                                 </div>
-                                <div class="flex flex-col space-y-1">
+                                <div class="flex flex-col space-y-1 pl-1">
                                     <button onclick="openRecipeSelector('${type}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:text-purple-600 hover:bg-purple-50 flex items-center justify-center transition-colors"><i data-lucide="list" class="w-4 h-4"></i></button>
                                     <button onclick="swapMeal('${type}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
                                     <button onclick="toggleSkip('${type}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"><i data-lucide="${skipped ? 'rotate-ccw' : 'x'}" class="w-4 h-4"></i></button>
