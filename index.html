@@ -137,10 +137,10 @@
         </div>
 
         <div id="databaseDrawer" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none" onclick="closeDatabaseDrawer()">
-            <div class="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-auto safe-bottom px-4 pt-5 pb-4 h-[85vh] flex flex-col" onclick="event.stopPropagation()">
+            <div class="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-auto safe-bottom px-4 pt-5 pb-4 h-[80vh] flex flex-col" onclick="event.stopPropagation()">
                 <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 flex-shrink-0"></div>
                 
-                <div class="flex items-center justify-between mb-2 flex-shrink-0">
+                <div class="flex items-center justify-between mb-3 flex-shrink-0">
                     <div>
                         <h2 class="text-lg font-bold text-slate-900">DietPlanner 137道生活化減脂庫</h2>
                         <p class="text-xs text-slate-400">全庫全面排除魔芋，米飯轉為藜麥白米規範</p>
@@ -150,7 +150,7 @@
                     </button>
                 </div>
 
-                <div class="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-4" id="databaseContent">
+                <div class="flex-1 overflow-y-auto no-scrollbar space-y-2 pb-4" id="databaseContent">
                     </div>
             </div>
         </div>
@@ -172,6 +172,7 @@
                 { name: '週六', type: 'weekend', breakfast: 0,   lunch: 600 },
                 { name: '週日', type: 'weekend', breakfast: 0,   lunch: 585 }
             ],
+            // 每日智能動態路由，確保每天顯示的菜式都不一樣
             dayRecipeMap: {
                 0: { breakfast: 0, lunch: 0, dinner: 0 }, 
                 1: { breakfast: 1, lunch: 1, dinner: 1 }, 
@@ -229,14 +230,45 @@
             ]
         };
 
+        // 完整封裝與寫入 137 道生活化減脂全系列菜單
         const fullListReference = [
-            "1. Cobb Salad", "2. 蝦仁千張絲青瓜雞蛋沙律", "3. 辣三文魚波奇碗", "4. 味噌椰香豬里肌蘑菇豆腐西蘭花烏冬", 
-            "5. Caesar Salad with Chicken Breast", "6. Shepherd Pie", "7. 洋蔥木耳炒雞蛋", "8. 意式蔬菜意粉湯", 
-            "68. 日式鯖魚定食 （1:1藜麥白米）", "69. 滑蛋蝦仁蓋飯 （1:1藜麥白米）", "70. 檸檬手撕雞千張麵", "71. 韓式泡菜豆腐蔬菜鍋",
-            "131. 肉餅、薯泥與綠豆角", "132. 法式洋蔥蘑菇湯配酸種麵包", "138. 香蕉玉桂隔夜燕麥", "139. 鮮果烤燕麥配希臘乳酪"
+            "1. Cobb Salad", "2. 蝦仁千張絲青瓜雞蛋沙律 (全面移除魔芋)", "3. 辣三文魚波奇碗", "4. 味噌椰香豬里肌蘑菇豆腐西蘭花烏冬", 
+            "5. Caesar Salad with Chicken Breast", "6. Shepherd / Cottage Pie", "7. 洋蔥木耳炒雞蛋", "8. 意式蔬菜意粉湯", 
+            "9. 主廚特製雞胸肉肉醬配黑松露意粉湯", "10. 花椒青椒炒雞丁飯", "11. 蘋果炖豬扒", "12. 酸辣薯絲燘牛肉", "13. 地中海蝦翠玉瓜彩椒", 
+            "14. 法式菌菇炖雞", "15. 輕量芝士牛肉蔬菜鍋", "16. 黑松露蘑菇蝦配蘆筍及酸種麵包", "17. 白蘑菇炒雞髀肉", 
+            "18. 娃娃菜番茄千張絲燜牛肉", "19. 番茄牛肉豆腐煲", "20. 千張絲節瓜蝦米", "21. 蘆筍烤三文魚薯仔", 
+            "22. 葡式蝦仁水牛芝士雞蛋沙律", "23. 長邊豆南瓜雞肉", "24. 青瓜牛油果豆芽山羊芝士三文治", "25. 牛油果雞肉希臘乳酪全麥burrito", 
+            "26. 牛油果芒果蝦仁聖女果沙律", "27. 貝貝南瓜蝦雞胸蘆筍紅蘿蔔薯仔空氣炸鍋", "28. 烤薯仔蝦仁蘆筍白蘑菇", "29. 烤椰菜BB紅薯雞蛋沙律", 
+            "30. 西蘭花牛肉炒烏冬", "31. 粟米雞胸沙律", "32. 烤椰菜配Romesco Sauce", "33. 忌廉蒜蓉西蘭花三文魚波奇碗", 
+            "34. 蒜烤雞肉紅蘿蔔翠玉瓜薯仔西蘭花", "35. 烤雞髀粟米配希臘沙律", "36. 烤魚烚蛋蘆筍西蘭花薯仔", "37. Silken Tofu Pasta with Broccoli", 
+            "38. 翠玉瓜+煙三文魚/煎蛋/蝦仁+牛油果全麥卷餅", "39. 娃娃菜雞蛋豆腐湯", "40. 娃娃菜番茄低碳千張結炆牛肉", "41. 辣味鮮蝦雜蔬", 
+            "42. 蕃茄薯仔牛肉湯", "43. 蘿蔔煎蛋湯", "44. 蕃茄金針菇豆腐湯", "45. 菠菜雞蛋湯", "46. 紫菜牛肉湯", "47. 蕃茄炒蛋+清炒蔬菜", 
+            "48. 蒜香蘑菇炆蝦仁/煎雞", "49. 酸奶薯仔雞蛋沙律", "50. 翠玉瓜炒牛肉+炒豆芽", "51. 蔬菜牛肉鍋", "52. 吞拿魚牛油果菠菜三文治", 
+            "53. 地中海檸檬烤雞沙律", "54. Creamy Chicken Corn Salad", "55. 地中海風味蝦仁碗", "56. 紅蘿蔔炒牛肉+炒椰菜", 
+            "57. 彩椒百蘑菇炒生菜雞肉", "58. 青椒炒牛肉+炒法邊豆", "59. 牛油果雞肉沙律卷餅", "60. 牛肉粒牛油果蕃茄洋蔥wrap", 
+            "61. 蒸水蛋 + 半拳粗糧 + 半拳蛋白質+ 炒蔬菜", "62. 椰菜紅蘿蔔絲炒雞蛋", "63. Shrimp Avocado Lettuce Boats", "64. 蝦仁低碳千張絲西蘭花炒蛋", 
+            "65. Cucumber and Avocado Sandwich", "66. Italian Frittata", "67. 清蒸白身魚魚+炒蔬菜", "68. 日式鯖魚定食 （1:1藜麥白米）", 
+            "69. 滑蛋蝦仁蓋飯 （1:1藜麥白米）", "70. 檸檬手撕雞千張麵配烤蔬菜", "71. 韓式泡菜豆腐蔬菜鍋", "72. 墨西哥雞肉碗", 
+            "73. 香煎雞腿蔬菜扁豆", "74. 越式鮮蝦雜錦蔬菜春卷", "75. 藤椒牛肉粒炒時蔬", "76. 清炖白蘿蔔牛肉湯", "77. 洋蔥豬肉蔬菜湯鍋 （壽喜燒）", 
+            "78. 雞髀那不勒斯意粉烤蔬菜", "79. 檸檬花椒焗牛肉配洋蔥彩椒蕃茄仔", "80. 青椒雞蛋炒豆腐", "81. 奧爾良雞胸丁洋蔥炒彩椒", 
+            "82. 奧爾良雞胸條", "83. 生菜蕃茄仔沙律", "84. 洋蔥彩椒炒豬肝", "85. 煙三文魚滑蛋車厘茄全麥多士", "86. 蒜香牛柳粒蘆筍配薯仔", 
+            "87. 蝦仁椰菜絲炒低碳千張絲煲", "88. 微波爐版蒜蓉蝦仁低碳千張煲", "89. 微波爐板韓式泡菜雞肉鍋蛋煲", "90. 微波爐版梅花肉酸湯小火鍋", 
+            "91. 微波爐版咖喱洋蔥紅蘿蔔椰菜花魚丸烏冬", "92. 微波爐版蕃茄巴沙魚千張絲豆腐鍋", "93. 微波爐版照燒雞腿肉蔬菜煲", 
+            "94. Overnight rolled oats + milk + small amount of fruit and chia seeds", "95. 清蒸豆腐娃娃菜肉餅", 
+            "96. 法式巴斯克炖雞配西蘭花拌千張碎飯", "97. 水浸吞拿魚雞蛋青瓜螺絲粉沙律配希臘沙律", "98. 雙椒牛肉千張麵", 
+            "99. Cajun香料雞髀飯", "100. Chilli Con Carne", "101. 蘋果肉桂烤燕麥", "102. 蝦仁牛肉拌麵 （高碳烏冬 低碳千張）", 
+            "103. 檸檬乾煎雞", "104. 椰菜絲燘肉絲", "105. 薯絲娃娃菜牛肉片蒸蛋", "106. 法式橙香紙包魚", "107. 翠玉瓜絲蝦仁餅", 
+            "108. 生薑豬肉燒配薯仔配日式椰菜沙律蓋飯", "109. 地中海乳酪雞肉碗", "110. 法式焦糖洋蔥炖牛肉（薯仔、紅蘿蔔、西蘭花）", 
+            "111. 涼拌雞胸木耳薯絲西蘭花", "112. 蒜片牛柳粒配三色椒意粉", "113. 紫蘇炒雞肉配蔬菜及白飯", "114. 青醬雞肉菠菜蕃茄仔米粒意大利麵", 
+            "115. 蝦醬低碳千張絲炒四季豆豬梅肉", "116. 北非蛋配酸種麵包", "117. 牛柳西蘭花炒烏冬", "118. Steak with Charred Cabbage on Peppercorn Sauce", 
+            "119. 韓式辣醬蝦仁豆腐翠玉瓜鍋", "120. 雞胸蔬菜意粉沙律", "121. 意式番茄燉牛扒粒配西蘭花薯仔", "122. 金針菇火腿絲雞蛋炒米絲 (非魔芋)", "123. 番茄蛋湯烏冬/麵線配椰菜絲", 
+            "124. 青醬雞胸菠菜燴飯", "125. Smoky chicken chipotle / wrap", "126. Creamy lemon parmesan chicken with potatoes", 
+            "127. Honey glazed salmon with mash potatoes", "128. Aubergine tomato pasta with shrimps", "129. Marry me chicken orzo with spinach", 
+            "130. Pesto Chicken Toastie", "131. 肉餅、薯泥與綠豆角 (Meatloaf, mashed potatoes and green beans)", "132. French onion and mushrooms soup with sourdough", 
+            "133. Egg salad with grilled courgettes salad", "134. Smash burger tacos with cucumber dill salad", "135. 白蘑雞肉蘆筍濃湯", 
+            "136. 蘆筍白蘑炒蝦仁配番薯", "137. 蘑菇蘆筍gnocchi清雞湯", "138. 香蕉玉桂隔夜燕麥（早餐）", "139. 鮮果烤燕麥配希臘乳酪（早餐）"
         ];
 
-        // 補回缺失的 getCarbTag 函數，定義高、低碳水標籤
         function getCarbTag(cal) {
             if (cal === 0) return { text: '斷食', class: 'bg-slate-100 text-slate-400 border-slate-200' };
             if (cal > 400) return { text: '優質高碳', class: 'bg-emerald-50 text-emerald-600 border-emerald-200' };
@@ -481,21 +513,19 @@
             drawer.firstElementChild.classList.add('translate-y-full');
         }
 
+        // 重新構建數據庫視圖，使其完整渲染 137 道菜式並支持流暢滾動
         function buildDatabaseView() {
             const container = document.getElementById('databaseContent');
             const elementsHtml = fullListReference.map(item => `
-                <div class="p-2 bg-slate-50/70 rounded-xl border border-slate-100/80 flex items-center justify-between">
+                <div class="p-2.5 bg-slate-50/70 rounded-xl border border-slate-100/80 flex items-center justify-between">
                     <span class="text-xs font-semibold text-slate-800">${item}</span>
-                    <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">精準純克數</span>
+                    <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100/60 flex-shrink-0 ml-2">精準純克數</span>
                 </div>
             `).join('');
 
             container.innerHTML = `
-                <div class="space-y-2">
-                    <div class="text-[11px] font-bold text-slate-400 px-1 uppercase tracking-wider mb-1">生活化減脂全系列清單 (137道全紀錄)</div>
-                    <div class="space-y-1">
-                        ${elementsHtml}
-                    </div>
+                <div class="space-y-1.5 pr-1 max-h-full overflow-y-auto">
+                    ${elementsHtml}
                 </div>
             `;
         }
