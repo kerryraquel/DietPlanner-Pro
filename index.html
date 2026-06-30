@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DietPlanner Pro</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -27,36 +29,45 @@
 </head>
 <body class="h-full font-sans text-slate-800 antialiased flex justify-center bg-slate-100">
 
+    <!-- Mobile Container Emulator -->
     <div id="app" class="w-full max-w-md bg-slate-50 min-h-screen flex flex-col relative overflow-x-hidden shadow-2xl shadow-slate-300/50">
         
+        <!-- Header / Day Selector Container -->
         <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 safe-top px-4 pb-3">
             <div class="flex items-center justify-between mb-3">
                 <div>
                     <h1 class="text-xs font-semibold uppercase tracking-wider text-slate-400">DietPlanner Pro</h1>
                     <p class="text-lg font-bold text-slate-900 flex items-center gap-1.5">
-                        單人極致配額系統 <span class="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full font-medium">1100 kcal</span>
+                        配額管理系統 <span class="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full font-medium">1100 kcal</span>
                     </p>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="openDatabaseDrawer()" class="text-xs px-2.5 py-1.5 rounded-xl font-medium transition-all duration-200 border border-slate-200 bg-white text-indigo-600 flex items-center gap-1 shadow-sm active:scale-95">
-                        <i class="fa-solid fa-database"></i> 137道完整庫
+                <div class="flex gap-1.5">
+                    <button onclick="toggleServings()" id="servingsBtn" class="text-xs px-2 py-1.5 rounded-xl font-bold transition-all duration-200 border border-slate-200 bg-white text-slate-700 flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-users text-indigo-500"></i> 單人份
                     </button>
-                    <button onclick="togglePrepMode()" id="prepBadge" class="text-xs px-2.5 py-1.5 rounded-xl font-medium transition-all duration-200 border border-slate-200 bg-white text-slate-600 flex items-center gap-1">
+                    <button onclick="togglePrepMode()" id="prepBadge" class="text-xs px-2 py-1.5 rounded-xl font-medium transition-all duration-200 border border-slate-200 bg-white text-slate-600 flex items-center gap-1">
                         <i class="fa-solid fa-kitchen-set"></i> 備餐
+                    </button>
+                    <button onclick="openDatabaseDrawer()" class="text-xs px-2 py-1.5 rounded-xl font-medium transition-all duration-200 border border-slate-200 bg-white text-indigo-600 flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-database"></i> 137道完整庫
                     </button>
                 </div>
             </div>
 
+            <!-- Horizontal Day Scroller -->
             <div class="flex gap-2 overflow-x-auto no-scrollbar py-1" id="dayTabs">
-                </div>
+                <!-- Injected via JavaScript -->
+            </div>
         </header>
 
+        <!-- Main Dashboard Container -->
         <main class="flex-1 px-4 py-4 space-y-4 pb-24 overflow-y-auto">
             
+            <!-- Global Calorie / Macro Dashboard Card -->
             <div class="bg-white rounded-2xl shadow-native p-4 border border-slate-100/80">
                 <div class="flex items-center justify-between mb-4">
                     <div class="space-y-0.5">
-                        <span class="text-xs font-medium text-slate-400">今日總熱量消耗上限</span>
+                        <span class="text-xs font-medium text-slate-400">今日單人熱量消耗上限</span>
                         <div class="flex items-baseline gap-1">
                             <span id="globalTargetCal" class="text-3xl font-black tracking-tight text-slate-900">1100</span>
                             <span class="text-xs font-bold text-slate-500">kcal</span>
@@ -70,6 +81,7 @@
                     </div>
                 </div>
 
+                <!-- Macro Progress Indicator Blocks -->
                 <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-50">
                     <div class="bg-slate-50 p-2.5 rounded-xl text-center">
                         <span class="text-[10px] font-bold text-slate-400 block mb-0.5">蛋白質</span>
@@ -86,9 +98,12 @@
                 </div>
             </div>
 
+            <!-- Dynamic Meal Section Cards Wrapper -->
             <div id="mealsContainer" class="space-y-4">
-                </div>
+                <!-- Injected via JavaScript dynamically -->
+            </div>
 
+            <!-- Integrated Water Tracker Card -->
             <div class="bg-white rounded-2xl shadow-native p-4 border border-slate-100/80 flex items-center justify-between">
                 <div class="space-y-1">
                     <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
@@ -105,6 +120,7 @@
 
         </main>
 
+        <!-- Bottom Sheet Recipe Drawer Overlay -->
         <div id="recipeDrawer" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none" onclick="closeDrawer()">
             <div class="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-auto safe-bottom px-4 pt-5 pb-4" onclick="event.stopPropagation()">
                 <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-3"></div>
@@ -120,43 +136,52 @@
                     </button>
                 </div>
 
-                <p class="text-[10px] text-slate-400 mb-3"><i class="fa-solid fa-circle-info"></i> 食材用量已根據當前熱量配額進行自動增減比例，可點擊進行食材替換 (Substitute)。</p>
+                <div id="drawerScaleNotice" class="text-[10px] font-medium text-slate-500 mb-2 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100/50">
+                    <!-- Dynamic scaling scale multiplier notes go here -->
+                </div>
 
                 <div class="mb-3 bg-slate-50 p-2.5 rounded-xl flex items-center justify-between">
-                    <span class="text-xs font-semibold text-slate-500">當前餐次分配熱量配額</span>
+                    <span class="text-xs font-semibold text-slate-500">今日此餐分配熱量</span>
                     <span id="drawerCal" class="text-xl font-black text-slate-900">-- <span class="text-xs font-bold text-slate-400">kcal</span></span>
                 </div>
 
-                <div class="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar pr-1" id="drawerIngredients">
-                    </div>
+                <!-- Ingredient Grid View -->
+                <div class="space-y-2 max-h-[240px] overflow-y-auto no-scrollbar pr-1" id="drawerIngredients">
+                    <!-- Rows dynamically generated -->
+                </div>
             </div>
         </div>
 
+        <!-- Global Database View Drawer Overlay -->
         <div id="databaseDrawer" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none" onclick="closeDatabaseDrawer()">
             <div class="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-auto safe-bottom px-4 pt-5 pb-4 h-[85vh] flex flex-col" onclick="event.stopPropagation()">
                 <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 flex-shrink-0"></div>
                 
                 <div class="flex items-center justify-between mb-2 flex-shrink-0">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">DietPlanner 137道完整生活化減脂庫</h2>
-                        <p class="text-xs text-slate-400">全庫全面排除魔芋，米飯統一轉為藜麥白米規範</p>
+                        <h2 class="text-lg font-bold text-slate-900">DietPlanner 137道生活化減脂庫</h2>
+                        <p class="text-xs text-slate-400">全庫全面排除魔芋，米飯轉為藜麥白米規範</p>
                     </div>
                     <button onclick="closeDatabaseDrawer()" class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
                         <i class="fa-solid fa-xmark text-sm"></i>
                     </button>
                 </div>
 
+                <!-- Scrollable Database Categories -->
                 <div class="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-4" id="databaseContent">
-                    </div>
+                    <!-- Dynamic categories injected here -->
+                </div>
             </div>
         </div>
 
     </div>
 
+    <!-- State & Core Engine -->
     <script>
         const state = {
             currentDay: 0,
             prepMode: false,
+            isTwoServings: false, // New interactive toggle variable
             waterIntake: 0,
             days: [
                 { name: '週一', type: 'weekday', breakfast: 250, lunch: 580 },
@@ -167,13 +192,20 @@
                 { name: '週六', type: 'weekend', breakfast: 0,   lunch: 600 },
                 { name: '週日', type: 'weekend', breakfast: 0,   lunch: 585 }
             ],
-            // Default selected recipe index per meal category
-            selectedRecipes: { breakfast: 0, lunch: 0, dinner: 1 },
+            // Dynamic allocation map indices per day to achieve a highly diversified daily display matrix
+            dayRecipeMap: {
+                0: { breakfast: 0, lunch: 0, dinner: 0 }, // Monday
+                1: { breakfast: 1, lunch: 1, dinner: 1 }, // Tuesday
+                2: { breakfast: 2, lunch: 2, dinner: 2 }, // Wednesday
+                3: { breakfast: 3, lunch: 3, dinner: 3 }, // Thursday
+                4: { breakfast: 5, lunch: 4, dinner: 4 }, // Friday
+                5: { breakfast: 0, lunch: 1, dinner: 5 }, // Saturday (Breakfast skipped anyway)
+                6: { breakfast: 0, lunch: 2, dinner: 6 }  // Sunday (Breakfast skipped anyway)
+            },
             substitutions: {},
-            macros: { P: '78g', C: '118g', F: '35g' }
+            macros: { P: '76g', C: '122g', F: '34g' }
         };
 
-        // Standard Safe Substitution Mapping Pool
         const substitutionPool = {
             '大燕麥片': ['高纖黑麥片', '純糙米麩'],
             '希臘優格': ['低脂白乳酪', '植物燕麥優格'],
@@ -184,52 +216,41 @@
             '香煎板豆腐': ['鹽滷豆干條', '鷹嘴豆泥'],
             '乾煎大西洋鮭魚菲力': ['乾煎海鱸魚', '香烤鱈魚菲力'],
             '水煮去殼雞蛋': ['鵪鶉蛋四顆', '液體蛋白液'],
-            '舒肥牛里肌切片': ['舒肥豬里肌', '嫩火雞肉片']
+            '舒肥牛里肌切片': ['舒肥豬里肌', '嫩火雞肉片'],
+            '高纖烏冬麵': ['全麥蕎麥麵', '高纖燕麥麵絲']
         };
 
-        // 137 Complete Clean Recipes Database - Fully Classified with BaseCal design weights
+        // Fully Populated and Extended Structural Balanced Recipes Database Layout
         const recipeDatabase = {
             breakfast: [
-                { id: 'b1', name: '香蕉玉桂隔夜燕麥', baseCal: 250, ingredients: [{ name: '大燕麥片', qty: 45 }, { name: '熟香蕉肉', qty: 60 }, { name: '奇亞籽', qty: 10 }, { name: '肉桂粉', qty: 2 }, { name: '溫開水', qty: 150 }] },
-                { id: 'b2', name: '鮮果烤燕麥配希臘乳酪', baseCal: 300, ingredients: [{ name: '大燕麥片', qty: 40 }, { name: '全蛋液', qty: 50 }, { name: '希臘優格', qty: 100 }, { name: '冷凍綜合莓果', qty: 40 }] },
-                { id: 'b3', name: '蘋果肉桂烤燕麥', baseCal: 280, ingredients: [{ name: '大燕麥片', qty: 45 }, { name: '蘋果丁', qty: 60 }, { name: '全蛋液', qty: 40 }, { name: '肉桂粉', qty: 2 }] },
-                { id: 'b4', name: '粟米雞胸沙律', baseCal: 260, ingredients: [{ name: '水煮雞胸肉', qty: 100 }, { name: '甜玉米粒', qty: 50 }, { name: '生菜沙拉葉', qty: 120 }, { name: '無糖優格醬', qty: 20 }] },
-                { id: 'b5', name: '青瓜牛油果豆芽山羊芝士三文治', baseCal: 310, ingredients: [{ name: '全麥吐司', qty: 60 }, { name: '牛油果肉', qty: 30 }, { name: '小黃瓜片', qty: 50 }, { name: '山羊芝士', qty: 15 }] },
-                { id: 'b6', name: '煙三文魚滑蛋車厘茄全麥多士', baseCal: 290, ingredients: [{ name: '全麥多士', qty: 50 }, { name: '煙三文魚', qty: 45 }, { name: '全蛋液', qty: 60 }, { name: '車厘茄', qty: 40 }] },
-                { id: 'b7', name: 'Overnight rolled oats + milk + chia seeds', baseCal: 270, ingredients: [{ name: '大燕麥片', qty: 45 }, { name: '脫脂牛奶粉', qty: 15 }, { name: '奇亞籽', qty: 12 }, { name: '綜合藍莓', qty: 30 }] }
+                { id: 'b1', name: '138. 香蕉玉桂隔夜燕麥', baseCal: 250, ingredients: [{ name: '大燕麥片', qty: 45 }, { name: '熟香蕉肉', qty: 60 }, { name: '奇亞籽', qty: 10 }, { name: '肉桂粉', qty: 2 }, { name: '溫開水', qty: 150 }] },
+                { id: 'b2', name: '139. 鮮果烤燕麥配希臘乳酪', baseCal: 300, ingredients: [{ name: '大燕麥片', qty: 40 }, { name: '全蛋液', qty: 50 }, { name: '希臘優格', qty: 100 }, { name: '冷凍綜合莓果', qty: 40 }] },
+                { id: 'b3', name: '101. 蘋果肉桂烤燕麥', baseCal: 280, ingredients: [{ name: '大燕麥片', qty: 45 }, { name: '蘋果丁', qty: 60 }, { name: '全蛋液', qty: 40 }, { name: '肉桂粉', qty: 2 }] },
+                { id: 'b4', name: '31. 粟米雞胸沙律', baseCal: 260, ingredients: [{ name: '水煮雞胸肉', qty: 100 }, { name: '甜玉米粒', qty: 50 }, { name: '生菜沙拉葉', qty: 120 }, { name: '無糖優格醬', qty: 20 }] },
+                { id: 'b5', name: '24. 青瓜牛油果豆芽山羊芝士三文治', baseCal: 310, ingredients: [{ name: '全麥吐司', qty: 60 }, { name: '牛油果肉', qty: 30 }, { name: '小黃瓜片', qty: 50 }, { name: '山羊芝士', qty: 15 }] },
+                { id: 'b6', name: '85. 煙三文魚滑蛋車厘茄全麥多士', baseCal: 290, ingredients: [{ name: '全麥多士', qty: 50 }, { name: '煙三文魚', qty: 45 }, { name: '全蛋液', qty: 60 }, { name: '車厘茄', qty: 40 }] },
+                { id: 'b7', name: '94. Overnight Oats + Milk', baseCal: 270, ingredients: [{ name: '大燕麥片', qty: 45 }, { name: '脫脂牛奶粉', qty: 15 }, { name: '奇亞籽', qty: 12 }] }
             ],
             lunch: [
-                { id: 'l1', name: '低脂鮮蝦板豆腐藜麥飯', baseCal: 580, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 140 }, { name: '低脂鮮蝦仁', qty: 110 }, { name: '香煎板豆腐', qty: 80 }, { name: '水煮青花菜', qty: 150 }, { name: '初榨橄欖油', qty: 8 }] },
-                { id: 'l2', name: '日式鯖魚定食 （1:1藜麥白米）', baseCal: 590, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 130 }, { name: '日式烤鯖魚', qty: 95 }, { name: '和風涼拌海帶絲', qty: 80 }, { name: '味噌湯塊', qty: 15 }] },
-                { id: 'l3', name: '滑蛋蝦仁蓋飯 （1:1藜麥白米）', baseCal: 570, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 140 }, { name: '低脂鮮蝦仁', qty: 120 }, { name: '全蛋液', qty: 100 }, { name: '蔥花醬油', qty: 10 }] },
-                { id: 'l4', name: '西蘭花牛肉炒烏冬', baseCal: 560, ingredients: [{ name: '高纖烏冬麵', qty: 150 }, { name: '嫩牛肉片', qty: 120 }, { name: '西蘭花', qty: 100 }, { name: '鮮香菇條', qty: 50 }] },
-                { id: 'l5', name: 'Cobb Salad', baseCal: 550, ingredients: [{ name: '水煮雞胸肉', qty: 120 }, { name: '水煮去殼雞蛋', qty: 50 }, { name: '牛油果', qty: 40 }, { name: '羅馬生菜', qty: 150 }, { name: '低脂沙拉醬', qty: 15 }] },
-                { id: 'l6', name: '蝦仁千張絲青瓜雞蛋沙律', baseCal: 560, ingredients: [{ name: '低脂鮮蝦仁', qty: 100 }, { name: '千張豆腐絲', qty: 80 }, { name: '小黃瓜條', qty: 120 }, { name: '水煮去殼雞蛋', qty: 50 }] },
-                { id: 'l7', name: '辣三文魚波奇碗', baseCal: 585, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 120 }, { name: '生食級三文魚丁', qty: 100 }, { name: '毛豆仁', qty: 40 }, { name: '辣味美乃滋醬', qty: 10 }] },
-                { id: 'l8', name: '味噌椰香豬里肌蘑菇豆腐西蘭花烏冬', baseCal: 590, ingredients: [{ name: '高纖烏冬麵', qty: 120 }, { name: '豬里肌肉片', qty: 110 }, { name: '白蘑菇', qty: 60 }, { name: '板豆腐', qty: 80 }, { name: '低脂椰漿', qty: 15 }] },
-                { id: 'l9', name: '花椒青椒炒雞丁', baseCal: 575, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 130 }, { name: '雞胸肉丁', qty: 130 }, { name: '青椒塊', qty: 100 }, { name: '不飽和植物油', qty: 7 }] },
-                { id: 'l10', name: '酸辣薯絲燘牛肉', baseCal: 580, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 100 }, { name: '牛里肌條', qty: 120 }, { name: '馬鈴薯絲', qty: 100 }, { name: '香醋辣椒油', qty: 10 }] },
-                { id: 'l11', name: '地中海蝦翠玉瓜彩椒意粉', baseCal: 565, ingredients: [{ name: '全麥意大利麵', qty: 70 }, { name: '低脂鮮蝦仁', qty: 110 }, { name: '翠玉瓜片', qty: 100 }, { name: '彩椒條', qty: 80 }] },
-                { id: 'l12', name: '白蘑菇炒雞髀肉配粗糧飯', baseCal: 570, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 120 }, { name: '去皮雞髀肉', qty: 130 }, { name: '白蘑菇片', qty: 90 }, { name: '不飽和植物油', qty: 6 }] },
-                { id: 'l13', name: '蝦仁牛肉拌千張麵', baseCal: 575, ingredients: [{ name: '千張豆腐麵', qty: 120 }, { name: '低脂鮮蝦仁', qty: 80 }, { name: '嫩牛肉片', qty: 80 }, { name: '特調拌麵醬', qty: 15 }] },
-                { id: 'l14', name: 'Cajun香料雞髀飯', baseCal: 595, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 130 }, { name: '卡真香料去皮雞髀肉', qty: 140 }, { name: '烤西蘭花', qty: 100 }] },
-                { id: 'l15', name: '生薑豬肉燒配薯仔日式蓋飯', baseCal: 580, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 110 }, { name: '薄切豬梅花肉', qty: 120 }, { name: '馬鈴薯塊', qty: 80 }, { name: '日式高麗菜絲', qty: 60 }] }
+                { id: 'l1', name: '69. 滑蛋蝦仁蓋飯 （1:1藜麥白米）', baseCal: 570, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 140 }, { name: '低脂鮮蝦仁', qty: 120 }, { name: '全蛋液', qty: 100 }, { name: '蔥花醬油', qty: 10 }] },
+                { id: 'l2', name: '68. 日式鯖魚定食 （1:1藜麥白米）', baseCal: 590, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 130 }, { name: '日式烤鯖魚', qty: 95 }, { name: '和風涼拌海帶絲', qty: 80 }, { name: '味噌湯塊', qty: 15 }] },
+                { id: 'l3', name: '1. Cobb Salad 優質盤', baseCal: 550, ingredients: [{ name: '水煮雞胸肉', qty: 120 }, { name: '水煮去殼雞蛋', qty: 50 }, { name: '牛油果', qty: 40 }, { name: '羅馬生菜', qty: 150 }] },
+                { id: 'l4', name: '30. 西蘭花牛肉炒烏冬', baseCal: 560, ingredients: [{ name: '高纖烏冬麵', qty: 150 }, { name: '嫩牛肉片', qty: 120 }, { name: '西蘭花', qty: 100 }, { name: '鮮香菇條', qty: 50 }] },
+                { id: 'l5', name: '10. 花椒青椒炒雞丁飯', baseCal: 575, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 130 }, { name: '雞胸肉丁', qty: 130 }, { name: '青椒塊', qty: 100 }, { name: '不飽和植物油', qty: 7 }] },
+                { id: 'l6', name: '12. 酸辣薯絲燘牛肉', baseCal: 580, ingredients: [{ name: '1:1 Quinoa Brown/White Rice (1:1 藜麥白米)', qty: 100 }, { name: '牛里肌條', qty: 120 }, { name: '馬鈴薯絲', qty: 100 }] },
+                { id: 'l7', name: '131. 肉餅、薯泥與綠豆角', baseCal: 585, ingredients: [{ name: '純牛肉碎肉餅', qty: 130 }, { name: '自製蒸馬鈴薯泥', qty: 120 }, { name: '鮮嫩綠豆角段', qty: 100 }, { name: '調味精華牛湯', qty: 30 }] }
             ],
             dinner: [
-                { id: 'd1', name: '乾煎鮭魚菲力沙拉減脂餐', baseCal: 250, ingredients: [{ name: '乾煎大西洋鮭魚菲力', qty: 130 }, { name: '綜合綠葉嫩生菜', qty: 120 }, { name: '溫室小黃瓜條', qty: 90 }, { name: '水煮去殼雞蛋', qty: 50 }, { name: '特調無糖油醋汁', qty: 12 }] },
-                { id: 'd2', name: '舒肥嫩牛肉鮮蔬低碳餐', baseCal: 280, ingredients: [{ name: '舒肥牛里肌切片', qty: 140 }, { name: '炙烤櫛瓜片', qty: 100 }, { name: '精選蒸南瓜塊', qty: 80 }, { name: '芝麻葉嫩葉', qty: 50 }, { name: '冷壓亞麻仁油', qty: 10 }] },
-                { id: 'd3', name: '娃娃菜番茄低碳千張結燜牛肉', baseCal: 240, ingredients: [{ name: '嫩牛肉片', qty: 120 }, { name: '大番茄塊', qty: 150 }, { name: '娃娃菜心', qty: 150 }, { name: '千張豆腐結', qty: 80 }] },
-                { id: 'd4', name: '番茄牛肉豆腐煲', baseCal: 260, ingredients: [{ name: '牛里肌肉片', qty: 110 }, { name: '大番茄', qty: 140 }, { name: '嫩豆腐塊', qty: 150 }, { name: '香菜小蔥', qty: 10 }] },
-                { id: 'd5', name: '千張絲節瓜蝦米煲', baseCal: 210, ingredients: [{ name: '千張豆腐絲', qty: 100 }, { name: '刺瓜節瓜條', qty: 180 }, { name: '優質開洋蝦米', qty: 20 }, { name: '不飽和植物油', qty: 5 }] },
-                { id: 'd6', name: '蔬菜牛肉冬粉鍋（減量冬粉）', baseCal: 270, ingredients: [{ name: '精選嫩牛肉片', qty: 110 }, { name: '減量綠豆冬粉', qty: 35 }, { name: '大白菜葉', qty: 150 }, { name: '凍豆腐', qty: 60 }] },
-                { id: 'd7', name: '清炖白蘿蔔牛肉湯', baseCal: 230, ingredients: [{ name: '牛腩牛里肌條', qty: 120 }, { name: '白蘿蔔塊', qty: 200 }, { name: '生薑原湯', qty: 150 }] },
-                { id: 'd8', name: '韓式泡菜豆腐蔬菜鍋', baseCal: 220, ingredients: [{ name: '韓式熟成泡菜', qty: 100 }, { name: '嫩豆腐', qty: 150 }, { name: '梅花肉片', qty: 70 }, { name: '金針菇', qty: 80 }] },
-                { id: 'd9', name: '蒜香牛柳粒蘆筍配薯仔', baseCal: 290, ingredients: [{ name: '牛柳粒', qty: 120 }, { name: '嫩蘆筍段', qty: 100 }, { name: '小馬鈴薯塊', qty: 70 }, { name: '初榨橄欖油', qty: 8 }] },
-                { id: 'd10', name: '北非蛋佐少量酸種麵包', baseCal: 275, ingredients: [{ name: '全蛋液', qty: 100 }, { name: '番茄紅醬汁', qty: 120 }, { name: '鷹嘴豆', qty: 40 }, { name: '酸種麵包片', qty: 30 }] }
+                { id: 'd1', name: '21. 蘆筍烤三文魚薯仔', baseCal: 260, ingredients: [{ name: '乾煎大西洋鮭魚菲力', qty: 120 }, { name: '烤馬鈴薯塊', qty: 80 }, { name: '新鮮嫩蘆筍', qty: 100 }, { name: '初榨橄欖油', qty: 8 }] },
+                { id: 'd2', name: '19. 番茄牛肉豆腐煲', baseCal: 250, ingredients: [{ name: '牛里肌肉片', qty: 110 }, { name: '大番茄', qty: 140 }, { name: '嫩豆腐塊', qty: 150 }] },
+                { id: 'd3', name: '76. 清炖白蘿蔔牛肉湯', baseCal: 240, ingredients: [{ name: '牛里肌條', qty: 125 }, { name: '白蘿蔔塊', qty: 200 }, { name: '生薑調味原湯', qty: 100 }] },
+                { id: 'd4', name: '71. 韓式泡菜豆腐蔬菜鍋', baseCal: 230, ingredients: [{ name: '韓式熟成泡菜', qty: 100 }, { name: '嫩豆腐', qty: 150 }, { name: '梅花肉片', qty: 75 }] },
+                { id: 'd5', name: '86. 蒜香牛柳粒蘆筍配薯仔', baseCal: 290, ingredients: [{ name: '牛柳粒', qty: 120 }, { name: '嫩蘆筍段', qty: 100 }, { name: '小馬鈴薯塊', qty: 70 }] },
+                { id: 'd6', name: '116. 北非蛋配酸種麵包', baseCal: 275, ingredients: [{ name: '全蛋液', qty: 100 }, { name: '番茄紅醬汁', qty: 120 }, { name: '酸種麵包片', qty: 35 }] },
+                { id: 'd7', name: '132. 法式洋蔥蘑菇湯配酸種麵包', baseCal: 245, ingredients: [{ name: '白蘑菇片', qty: 100 }, { name: '焦糖炒洋蔥絲', qty: 80 }, { name: '酸種麵包', qty: 40 }] }
             ]
         };
 
-        // Static Master list reference arrays mapping out the remaining 137 entries index
         const fullListReference = [
             "1. Cobb Salad", "2. 蝦仁千張絲青瓜雞蛋沙律 (已除魔芋)", "3. 辣三文魚波奇碗", "4. 味噌椰香豬里肌蘑菇豆腐西蘭花烏冬", 
             "5. Caesar Salad with Chicken Breast", "6. Shepherd / Cottage Pie", "7. 洋蔥木耳炒雞蛋", "8. 意式蔬菜意粉湯", 
@@ -263,17 +284,10 @@
             "119. 韓式辣醬蝦仁豆腐翠玉瓜鍋", "120. 雞胸蔬菜意粉沙律", "121. 意式番茄燉牛扒粒配西蘭花薯仔", "123. 番茄蛋湯烏冬/麵線配椰菜絲", 
             "124. 青醬雞胸菠菜燴飯", "125. Smoky chicken chipotle / wrap", "126. Creamy lemon parmesan chicken with potatoes", 
             "127. Honey glazed salmon with mash potatoes", "128. Aubergine tomato pasta with shrimps", "129. Marry me chicken orzo with spinach", 
-            "130. Pesto Chicken Toastie", "131. Meatloaf, mashed potatoes and green beans", "132. French onion and mushrooms soup with sourdough", 
+            "130. Pesto Chicken Toastie", "131. 131. 肉餅、薯泥與綠豆角 (Meatloaf, mashed potatoes and green beans)", "132. French onion and mushrooms soup with sourdough", 
             "133. Egg salad with grilled courgettes salad", "134. Smash burger tacos with cucumber dill salad", "135. 白蘑雞肉蘆筍濃湯", 
             "136. 蘆筍白蘑炒蝦仁配番薯", "137. 蘑菇蘆筍gnocchi清雞湯", "138. 香蕉玉桂隔夜燕麥（早餐）", "139. 鮮果烤燕麥配希臘乳酪（早餐）"
         ];
-
-        function getCarbTag(cal) {
-            if (cal === 0) return { text: '斷食空窗', class: 'bg-purple-50 text-purple-700 border-purple-100' };
-            if (cal < 250) return { text: '極低碳燃脂', class: 'bg-emerald-50 text-emerald-700 border-emerald-100' };
-            if (cal <= 500) return { text: '控碳穩定', class: 'bg-blue-50 text-blue-700 border-blue-100' };
-            return { text: '高飽腹充能', class: 'bg-orange-50 text-orange-700 border-orange-100' };
-        }
 
         function initApp() {
             renderTabs();
@@ -292,7 +306,7 @@
                         : 'bg-white border-slate-100 text-slate-500 font-medium hover:bg-slate-50'
                     }">
                         <span class="text-xs block">${day.name}</span>
-                        <span class="text-[9px] opacity-70 block mt-0.5">${day.type === 'weekend' ? '週末' : '常規'}</span>
+                        <span class="text-[9px] opacity-70 block mt-0.5">${day.type === 'weekend' ? '斷食日' : '常規日'}</span>
                     </button>
                 `;
             }).join('');
@@ -320,7 +334,9 @@
                 const tag = getCarbTag(meal.cal);
                 const isDisabled = meal.cal === 0;
                 
-                const activeRecipeIdx = state.selectedRecipes[meal.id];
+                // Fetch dynamic rotated day configuration index
+                const dayConfig = state.dayRecipeMap[state.currentDay];
+                const activeRecipeIdx = dayConfig[meal.id];
                 const activeRecipe = recipeDatabase[meal.id][activeRecipeIdx] || recipeDatabase[meal.id][0];
 
                 const optionsHtml = recipeDatabase[meal.id].map((rcp, rIdx) => `
@@ -340,7 +356,7 @@
                                             <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">${meal.name}</h4>
                                             <span class="text-[10px] px-1.5 py-0.5 border rounded font-semibold ${tag.class}">${tag.text}</span>
                                         </div>
-                                        <p class="text-sm font-bold text-slate-900 mt-0.5">${isDisabled ? '此時段不進食' : activeRecipe.name}</p>
+                                        <p class="text-sm font-bold text-slate-900 mt-0.5">${isDisabled ? '週末不進早餐 · 配額累計至午晚' : activeRecipe.name}</p>
                                     </div>
                                 </div>
                                 
@@ -358,9 +374,9 @@
                             ${!isDisabled ? `
                             <div class="pt-2 border-t border-slate-50 flex items-center justify-between gap-2">
                                 <span class="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                                    <i class="fa-solid fa-arrows-rotate"></i> 快速切換主菜式
+                                    <i class="fa-solid fa-arrows-rotate"></i> 本日推薦切換
                                 </span>
-                                <select onchange="swapRecipe('${meal.id}', this.value)" class="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-2 py-1 max-w-[210px] font-medium outline-none focus:border-indigo-500">
+                                <select onchange="swapRecipe('${meal.id}', this.value)" class="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-2 py-1 max-w-[220px] font-medium outline-none focus:border-indigo-500">
                                     ${optionsHtml}
                                 </select>
                             </div>
@@ -372,7 +388,7 @@
         }
 
         function swapRecipe(mealId, index) {
-            state.selectedRecipes[mealId] = parseInt(index);
+            state.dayRecipeMap[state.currentDay][mealId] = parseInt(index);
             renderDashboard();
         }
 
@@ -380,6 +396,22 @@
             state.currentDay = index;
             renderTabs();
             renderDashboard();
+        }
+
+        // Person servings scaling routine component toggle
+        function toggleServings() {
+            state.isTwoServings = !state.isTwoServings;
+            const btn = document.getElementById('servingsBtn');
+            if(state.isTwoServings) {
+                btn.classList.remove('bg-white', 'text-slate-700');
+                btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
+                btn.innerHTML = `<i class="fa-solid fa-users text-white"></i> 二人份量`;
+            } else {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+                btn.classList.add('bg-white', 'text-slate-700');
+                btn.innerHTML = `<i class="fa-solid fa-users text-indigo-500"></i> 單人份`;
+            }
+            refreshActiveDrawerIfOpen();
         }
 
         function togglePrepMode() {
@@ -392,6 +424,10 @@
                 btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
                 btn.classList.add('bg-white', 'text-slate-600');
             }
+            refreshActiveDrawerIfOpen();
+        }
+
+        function refreshActiveDrawerIfOpen() {
             if (document.getElementById('recipeDrawer').classList.contains('opacity-100')) {
                 const activeId = document.getElementById('recipeDrawer').dataset.activeId;
                 const activeCal = document.getElementById('recipeDrawer').dataset.activeCal;
@@ -404,13 +440,14 @@
             document.getElementById('waterDisplay').innerText = `${state.waterIntake}g`;
         }
 
-        // Proportional Calorie Auto-Scaling Engine
+        // Proportional Calorie Auto-Scaling with Servings Scaling Modifiers
         function openDrawer(mealId, cal) {
             const drawer = document.getElementById('recipeDrawer');
             const tagEl = document.getElementById('drawerTag');
             const titleEl = document.getElementById('drawerTitle');
             const subTitleEl = document.getElementById('drawerRecipeName');
             const calEl = document.getElementById('drawerCal');
+            const noticeEl = document.getElementById('drawerScaleNotice');
             const ingContainer = document.getElementById('drawerIngredients');
 
             drawer.dataset.activeId = mealId;
@@ -423,16 +460,23 @@
             const mealNames = { breakfast: '高效輕食早餐', lunch: '豐盛飽腹午餐', dinner: '燃脂收尾晚餐' };
             titleEl.innerText = mealNames[mealId];
             
-            const activeRecipeIdx = state.selectedRecipes[mealId];
+            const dayConfig = state.dayRecipeMap[state.currentDay];
+            const activeRecipeIdx = dayConfig[mealId];
             const activeRecipe = recipeDatabase[mealId][activeRecipeIdx] || recipeDatabase[mealId][0];
             subTitleEl.innerText = activeRecipe.name;
             
-            calEl.innerHTML = `${cal} <span class="text-xs font-bold text-slate-400">kcal</span>`;
+            calEl.innerHTML = `${cal * (state.isTwoServings ? 2 : 1)} <span class="text-xs font-bold text-slate-400">kcal ${state.isTwoServings ? '(二人合計)' : ''}</span>`;
 
-            // Core scaling calculation ratio algorithm formulation mapping
+            // Calculate precise scaling weights matrices
             const calScaleFactor = cal / activeRecipe.baseCal;
+            const servingsMultiplier = state.isTwoServings ? 2 : 1;
             const prepMultiplier = state.prepMode ? 3 : 1;
-            const finalMultiplier = calScaleFactor * prepMultiplier;
+            
+            const finalMultiplier = calScaleFactor * servingsMultiplier * prepMultiplier;
+
+            // Generate scale structural notice summary strings
+            noticeEl.innerHTML = `<i class="fa-solid fa-calculator"></i> 當前用量權重計算：配額縮放(${calScaleFactor.toFixed(2)}倍) 
+                × 人數(${servingsMultiplier}倍) × 批量備餐(${prepMultiplier}倍) = <b>總計 ${(finalMultiplier).toFixed(2)} 倍重量</b>`;
 
             ingContainer.innerHTML = activeRecipe.ingredients.map((ing, index) => {
                 const subKey = `${activeRecipe.id}_${index}`;
@@ -442,11 +486,11 @@
                 const hasSubstitutes = substitutionPool[originalName] && substitutionPool[originalName].length > 0;
 
                 return `
-                    <div class="flex items-center justify-between p-3 bg-slate-50/60 rounded-xl border border-slate-100 transition-all duration-200">
+                    <div class="flex items-center justify-between p-2.5 bg-slate-50/60 rounded-xl border border-slate-100 transition-all duration-200">
                         <div class="space-y-0.5">
                             <span class="text-xs font-semibold text-slate-800 block">${displayName}</span>
                             ${hasSubstitutes ? `
-                                <button onclick="triggerSubstitute('${activeRecipe.id}', ${index}, '${originalName}')" class="text-[10px] text-indigo-500 font-medium hover:text-indigo-700 flex items-center gap-0.5 active:scale-95 transition-transform">
+                                <button onclick="triggerSubstitute('${activeRecipe.id}', ${index}, '${originalName}')" class="text-[10px] text-indigo-500 font-medium flex items-center gap-0.5 active:scale-95 transition-transform">
                                     <i class="fa-solid fa-repeat"></i> 替換食材
                                 </button>
                             ` : '<span class="text-[9px] text-slate-400 block">基準減脂食材</span>'}
@@ -461,7 +505,6 @@
             drawer.firstElementChild.classList.remove('translate-y-full');
         }
 
-        // Cyclic Interactive Single-Ingredient Substitute Switcher Loop
         function triggerSubstitute(recipeId, ingIndex, originalName) {
             const subKey = `${recipeId}_${ingIndex}`;
             const pool = substitutionPool[originalName];
@@ -473,7 +516,7 @@
             if (currentVal === originalName) {
                 state.substitutions[subKey] = pool[0];
             } else if (nextIndex >= pool.length) {
-                delete state.substitutions[subKey]; // back to base recipe native
+                delete state.substitutions[subKey];
             } else {
                 state.substitutions[subKey] = pool[nextIndex];
             }
@@ -490,22 +533,19 @@
             drawer.firstElementChild.classList.add('translate-y-full');
         }
 
-        // Master Static Reference List View Renderer (137 classified rows)
         function buildDatabaseView() {
             const container = document.getElementById('databaseContent');
-            
-            // Build elements for all 137 master text strings row dynamically
             const elementsHtml = fullListReference.map(item => `
-                <div class="p-2.5 bg-slate-50/70 rounded-xl border border-slate-100/80 flex items-center justify-between">
+                <div class="p-2 bg-slate-50/70 rounded-xl border border-slate-100/80 flex items-center justify-between">
                     <span class="text-xs font-semibold text-slate-800">${item}</span>
-                    <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">純克數安全庫</span>
+                    <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">精準純克數</span>
                 </div>
             `).join('');
 
             container.innerHTML = `
                 <div class="space-y-2">
-                    <div class="text-[11px] font-bold text-slate-400 px-1 uppercase tracking-wider mb-2">生活化減脂全系列清單 (共 137 項已校準)</div>
-                    <div class="space-y-1.5">
+                    <div class="text-[11px] font-bold text-slate-400 px-1 uppercase tracking-wider mb-1">生活化減脂全系列清單 (137道全紀錄)</div>
+                    <div class="space-y-1">
                         ${elementsHtml}
                     </div>
                 </div>
